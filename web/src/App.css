@@ -1,0 +1,136 @@
+/* Sidebar styling */
+.sidebar {
+  width: 220px;
+  background-color: #1f2937; /* Dark gray (Tailwind: gray-800) */
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+}
+
+.sidebar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sidebar-icon {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-icon:hover {
+  background-color: #374151; /* Tailwind: gray-700 */
+}
+
+.sidebar-icon.active {
+  background-color: #4b5563; /* Tailwind: gray-600 */
+}
+
+/* Header styling */
+.header {
+  height: 60px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #e5e7eb; /* Tailwind: gray-200 */
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-search {
+  flex: 1;
+  max-width: 400px;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  z-index: 10;
+}
+
+.profile-dropdown-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.profile-dropdown-item:hover {
+  background-color: #f3f4f6; /* Tailwind: gray-100 */
+}
+
+/* Main content */
+main {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background-color: #f9fafb; /* Tailwind: gray-50 */
+}
+
+/* Footer */
+.footer {
+  padding: 1rem;
+  text-align: center;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #6b7280; /* Tailwind: gray-500 */
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out forwards;
+}
