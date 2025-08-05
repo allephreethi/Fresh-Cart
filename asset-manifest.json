@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Fresh-Cart/static/css/main.147fb863.css",
-    "main.js": "/Fresh-Cart/static/js/main.7900a6e8.js",
+    "main.js": "/Fresh-Cart/static/js/main.d278257f.js",
     "index.html": "/Fresh-Cart/index.html",
     "main.147fb863.css.map": "/Fresh-Cart/static/css/main.147fb863.css.map",
-    "main.7900a6e8.js.map": "/Fresh-Cart/static/js/main.7900a6e8.js.map"
+    "main.d278257f.js.map": "/Fresh-Cart/static/js/main.d278257f.js.map"
   },
   "entrypoints": [
     "static/css/main.147fb863.css",
-    "static/js/main.7900a6e8.js"
+    "static/js/main.d278257f.js"
   ]
 }
