@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { FaHeart, FaPlus, FaMinus } from 'react-icons/fa';
 import { useAppContext } from '../context/AppContext';
 import CategoriesSection from '../components/Categories';
+import ProductDetailModal from '../components/ProductDetailModal'; // ✅ import
+
 
 const allProducts = [
   {
@@ -17,6 +19,19 @@ const allProducts = [
     description: 'Crisp and sweet apples, farm fresh and organically grown.',
     tags: ['New', 'Organic'],
     category: 'fruits',
+    manufacturer: 'Local Farms',
+    address: '123 Orchard Lane, Fruitville, USA',
+    origin: 'USA',
+    productionDate: '2023-09-01',
+    ingredients: 'Fresh Apples',
+    expiry: 'Best before 1 week from purchase.',
+    nutrition: {
+      calories: '52 kcal',
+      protein: '0.3g',
+      fat: '0.2g',
+      carbs: '14g',
+      vitamins: 'Vitamin C',
+    },
   },
   {
     id: 2,
@@ -28,6 +43,19 @@ const allProducts = [
     description: 'Toned milk for your daily nutrition and health needs.',
     tags: ['Hot'],
     category: 'dairy',
+    manufacturer: 'Amul',
+    address: 'Anand, Gujarat, India',
+    origin: 'India',
+    productionDate: '2023-10-01',
+    ingredients: 'Toned Milk',
+    expiry: 'Best before 7 days from packaging date.',
+    nutrition: {
+      calories: '60 kcal',
+      protein: '3.2g',
+      fat: '3.5g',
+      carbs: '4.7g',
+      vitamins: 'Calcium, Vitamin D',
+    },
   },
   {
     id: 3,
@@ -40,6 +68,19 @@ const allProducts = [
     description: 'Whole wheat flour for soft rotis and parathas.',
     tags: ['New'],
     category: 'packaged-food',
+    manufacturer: 'Aashirvaad',
+    address: 'Bangalore, Karnataka, India',
+    origin: 'India',
+    productionDate: '2023-08-15',
+    ingredients: 'Whole Wheat Flour',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '340 kcal',
+      protein: '10g',
+      fat: '1.5g',
+      carbs: '72g',
+      vitamins: 'Iron, B Vitamins',
+    },
   },
   {
     id: 4,
@@ -51,6 +92,19 @@ const allProducts = [
     description: 'Rich and creamy chocolate to sweeten your day.',
     tags: ['Hot'],
     category: 'packaged-food',
+    manufacturer: 'Cadbury',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-10',
+    ingredients: 'Sugar, Cocoa Butter, Milk Solids',
+    expiry: 'Best before 9 months from packaging date.',
+    nutrition: {
+      calories: '540 kcal',
+      protein: '7.5g',
+      fat: '30g',
+      carbs: '60g',
+      vitamins: 'Calcium',
+    },
   },
   {
     id: 5,
@@ -63,6 +117,19 @@ const allProducts = [
     description: 'Farm-fresh country eggs full of protein.',
     tags: ['Organic'],
     category: 'eggs',
+    manufacturer: 'Local Farms',
+    address: '456 Egg Lane, Farmtown, USA',
+    origin: 'USA',
+    productionDate: '2023-10-01',
+    ingredients: 'Eggs',
+    expiry: 'Best before 3 weeks from purchase.',
+    nutrition: {
+      calories: '155 kcal',
+      protein: '13g',
+      fat: '11g',
+      carbs: '1g',
+      vitamins: 'Vitamin D, B12',
+    },
   },
   {
     id: 6,
@@ -74,6 +141,19 @@ const allProducts = [
     description: 'Flavorful masala for tasty chicken dishes.',
     tags: ['Spicy'],
     category: 'masalas',
+    manufacturer: 'Everest',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-15',
+    ingredients: 'Spices, Salt',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '350 kcal',
+      protein: '10g',
+      fat: '5g',
+      carbs: '60g',
+      vitamins: 'Iron',
+    },
   },
   {
     id: 7,
@@ -86,6 +166,19 @@ const allProducts = [
     description: 'Premium quality almonds for daily health.',
     tags: ['Hot', 'Organic'],
     category: 'dry-fruits',
+    manufacturer: 'California Farms',
+    address: 'California, USA',
+    origin: 'USA',
+    productionDate: '2023-08-20',
+    ingredients: 'Almonds',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '575 kcal',
+      protein: '21g',
+      fat: '50g',
+      carbs: '22g',
+      vitamins: 'Vitamin E, Magnesium',
+    },
   },
   {
     id: 8,
@@ -97,6 +190,19 @@ const allProducts = [
     description: 'Frozen and ready-to-fry crispy chicken nuggets.',
     tags: ['Hot'],
     category: 'frozen-food',
+    manufacturer: 'Yummiez',
+    address: 'Delhi, India',
+    origin: 'India',
+    productionDate: '2023-09-05',
+    ingredients: 'Chicken, Bread Crumbs, Spices',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '300 kcal',
+      protein: '15g',
+      fat: '20g',
+      carbs: '25g',
+      vitamins: 'Iron',
+    },
   },
   {
     id: 9,
@@ -108,6 +214,19 @@ const allProducts = [
     description: 'Classic biscuits for tea-time munching.',
     tags: ['Classic'],
     category: 'biscuits',
+    manufacturer: 'Parle',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-12',
+    ingredients: 'Wheat Flour, Sugar, Hydrogenated Fat',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '480 kcal',
+      protein: '6g',
+      fat: '20g',
+      carbs: '70g',
+      vitamins: 'Iron',
+    },
   },
   {
     id: 10,
@@ -120,6 +239,19 @@ const allProducts = [
     description: 'Chilled carbonated beverage for refreshment.',
     tags: ['Chilled'],
     category: 'cold-drinks',
+    manufacturer: 'PepsiCo',
+    address: 'Gurgaon, Haryana, India',
+    origin: 'India',
+    productionDate: '2023-09-20',
+    ingredients: 'Carbonated Water, Sugar, Caffeine',
+    expiry: 'Best before 9 months from packaging date.',
+    nutrition: {
+      calories: '150 kcal',
+      protein: '0g',
+      fat: '0g',
+      carbs: '39g',
+      vitamins: 'None',
+    },
   },
   {
     id: 11,
@@ -131,6 +263,19 @@ const allProducts = [
     description: 'Crispy potato chips with classic salted flavor.',
     tags: ['Hot'],
     category: 'snacks',
+    manufacturer: 'Lays',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-18',
+    ingredients: 'Potatoes, Vegetable Oil, Salt',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '280 kcal',
+      protein: '3g',
+      fat: '18g',
+      carbs: '30g',
+      vitamins: 'None',
+    },
   },
   {
     id: 12,
@@ -142,6 +287,19 @@ const allProducts = [
     description: 'Strong and flavorful tea blend.',
     tags: ['Refreshing'],
     category: 'tea-coffee',
+    manufacturer: 'Tata',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-25',
+    ingredients: 'Tea Leaves',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '2 kcal',
+      protein: '0g',
+      fat: '0g',
+      carbs: '0g',
+      vitamins: 'None',
+    },
   },
   {
     id: 13,
@@ -154,6 +312,19 @@ const allProducts = [
     description: 'Instant coffee for a quick caffeine fix.',
     tags: ['Hot'],
     category: 'tea-coffee',
+    manufacturer: 'Bru',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-15',
+    ingredients: 'Instant Coffee',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '0 kcal',
+      protein: '0g',
+      fat: '0g',
+      carbs: '0g',
+      vitamins: 'None',
+    },
   },
   {
     id: 14,
@@ -165,6 +336,19 @@ const allProducts = [
     description: 'Hygienically packed frozen green peas.',
     tags: ['Frozen'],
     category: 'frozen-food',
+    manufacturer: 'Local Farms',
+    address: '123 Green Lane, Veggie Town, USA',
+    origin: 'USA',
+    productionDate: '2023-09-10',
+    ingredients: 'Green Peas',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '81 kcal',
+      protein: '5g',
+      fat: '0.4g',
+      carbs: '14g',
+      vitamins: 'Vitamin A, C',
+    },
   },
   {
     id: 15,
@@ -176,6 +360,19 @@ const allProducts = [
     description: 'Rich, creamy butter for spreading and cooking.',
     tags: ['Dairy'],
     category: 'dairy',
+    manufacturer: 'Amul',
+    address: 'Anand, Gujarat, India',
+    origin: 'India',
+    productionDate: '2023-09-05',
+    ingredients: 'Cream, Salt',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '717 kcal',
+      protein: '1g',
+      fat: '81g',
+      carbs: '0.1g',
+      vitamins: 'Vitamin A',
+    },
   },
   {
     id: 16,
@@ -187,6 +384,19 @@ const allProducts = [
     description: 'Naturally ripened bananas full of nutrients.',
     tags: ['Fresh'],
     category: 'fruits',
+    manufacturer: 'Local Farms',
+    address: '123 Orchard Lane, Fruitville, USA',
+    origin: 'USA',
+    productionDate: '2023-09-01',
+    ingredients: 'Bananas',
+    expiry: 'Best before 1 week from purchase.',
+    nutrition: {
+      calories: '89 kcal',
+      protein: '1.1g',
+      fat: '0.3g',
+      carbs: '23g',
+      vitamins: 'Vitamin B6, C',
+    },
   },
   {
     id: 17,
@@ -198,6 +408,19 @@ const allProducts = [
     description: 'Sweet and tangy fruit jam for your toast.',
     tags: ['Kids'],
     category: 'packaged-food',
+    manufacturer: 'Kissan',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-10',
+    ingredients: 'Sugar, Fruit Pulp, Pectin',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '250 kcal',
+      protein: '0.5g',
+      fat: '0g',
+      carbs: '60g',
+      vitamins: 'None',
+    },
   },
   {
     id: 18,
@@ -209,6 +432,19 @@ const allProducts = [
     description: 'Crispy spicy bhujia snack for every mood.',
     tags: ['Spicy'],
     category: 'snacks',
+    manufacturer: 'Haldiram',
+    address: 'Delhi, India',
+    origin: 'India',
+    productionDate: '2023-09-15',
+    ingredients: 'Gram Flour, Spices',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '500 kcal',
+      protein: '15g',
+      fat: '25g',
+      carbs: '60g',
+      vitamins: 'Iron',
+    },
   },
   {
     id: 19,
@@ -220,6 +456,19 @@ const allProducts = [
     description: 'Crunchy and buttery cookies with cashews.',
     tags: ['Hot'],
     category: 'biscuits',
+    manufacturer: 'Britannia',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-20',
+    ingredients: 'Wheat Flour, Sugar, Butter, Cashews',
+    expiry: 'Best before 6 months from packaging date.',
+    nutrition: {
+      calories: '500 kcal',
+      protein: '6g',
+      fat: '25g',
+      carbs: '65g',
+      vitamins: 'Iron',
+    },
   },
   {
     id: 20,
@@ -231,7 +480,21 @@ const allProducts = [
     description: 'Iodized salt for daily cooking needs.',
     tags: ['Essential'],
     category: 'groceries',
+    manufacturer: 'Tata',
+    address: 'Mumbai, Maharashtra, India',
+    origin: 'India',
+    productionDate: '2023-09-01',
+    ingredients: 'Iodized Salt',
+    expiry: 'Best before 24 months from packaging date.',
+    nutrition: {
+      calories: '0 kcal',
+      protein: '0g',
+      fat: '0g',
+      carbs: '0g',
+      vitamins: 'None',
+    },
   },
+
   {
     id: 21,
     title: 'Organic Cashews 250g',
@@ -242,7 +505,21 @@ const allProducts = [
     description: 'Rich, creamy cashews with organic certification.',
     tags: ['Organic'],
     category: 'dry-fruits',
+    manufacturer: 'Healthy Harvest Organics',
+    address: 'Goa, India',
+    origin: 'India',
+    productionDate: '2025-05-15',
+    ingredients: 'Organic Cashew Nuts',
+    expiry: 'Best before 9 months from packaging date.',
+    nutrition: {
+      calories: '553 kcal',
+      protein: '18g',
+      fat: '44g',
+      carbs: '30g',
+      vitamins: 'Vitamin E, B6'
+    }
   },
+  
   {
     id: 23,
     title: 'Fortune Sunlite Refined Sunflower Oil (1L)',
@@ -253,6 +530,19 @@ const allProducts = [
     description: 'Healthy refined sunflower oil for everyday cooking.',
     tags: ['Popular', 'Value Pack'],
     category: 'groceries',
+    manufacturer: 'Adani Wilmar Ltd.',
+    address: 'Ahmedabad, Gujarat, India',
+    origin: 'India',
+    productionDate: '2025-05-10',
+    ingredients: 'Refined Sunflower Oil, Antioxidant (E319)',
+    expiry: 'Best before 12 months from packaging date.',
+    nutrition: {
+      calories: '900 kcal',
+      protein: '0g',
+      fat: '100g',
+      carbs: '0g',
+      vitamins: 'Vitamin E'
+    }
   },
   {
     id: 24,
@@ -265,7 +555,20 @@ const allProducts = [
     description: 'Premium aged basmati rice for rich aroma and taste.',
     tags: ['Premium', 'Best Seller'],
     category: 'groceries',
-  },
+    manufacturer: 'KRBL Limited',
+    address: 'Noida, Uttar Pradesh, India',
+    origin: 'India',
+    productionDate: '2025-03-20',
+    ingredients: 'Aged Basmati Rice',
+    expiry: 'Best before 24 months from packaging date.',
+    nutrition: {
+      calories: '365 kcal',
+      protein: '7g',
+      fat: '0.5g',
+      carbs: '80g',
+      vitamins: 'B1 (Thiamine)'
+    }
+  }
 ];
 
 
@@ -283,6 +586,7 @@ export default function Products() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [sortOption, setSortOption] = useState('');
   const [searchQueryState, setSearchQueryState] = useState(searchQueryFromURL);
+  const [selectedProduct, setSelectedProduct] = useState(null); // ✅ for modal
 
   const {
     toggleWishlistItem,
@@ -407,10 +711,14 @@ export default function Products() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="relative rounded-xl shadow hover:shadow-md transition-all p-3 flex flex-col justify-between overflow-hidden bg-white"
+              className="relative rounded-xl shadow hover:shadow-md transition-all p-3 flex flex-col justify-between overflow-hidden bg-white cursor-pointer"
+              onClick={() => setSelectedProduct(product)} // ✅ open modal
             >
               <button
-                onClick={() => toggleWishlistItem(product)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWishlistItem(product);
+                }}
                 className={`absolute top-2 left-2 z-10 ${
                   isWished ? 'text-red-500' : 'text-gray-300'
                 } hover:text-red-600 transition-colors`}
@@ -437,7 +745,6 @@ export default function Products() {
               </div>
 
               <div className="flex justify-between items-center mt-2">
-                {/* Price Section */}
                 <div className="flex flex-col">
                   {product.originalPrice && product.originalPrice > product.price ? (
                     <div className="flex items-center gap-1">
@@ -455,9 +762,11 @@ export default function Products() {
                   )}
                 </div>
 
-                {/* Cart Actions */}
                 {quantity > 0 ? (
-                  <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => updateQuantity(product.id, -1)}
                       className="bg-[#5E936C] text-white p-1 text-xs rounded hover:bg-[#3E5F44]"
@@ -474,7 +783,10 @@ export default function Products() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => addToCart(product)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product);
+                    }}
                     className="bg-[#5E936C] text-white px-3 py-1 text-xs rounded hover:bg-[#3E5F44] transition"
                   >
                     Add to Cart
@@ -485,6 +797,14 @@ export default function Products() {
           );
         })}
       </div>
+
+      {/* ✅ Modal */}
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </div>
   );
 }

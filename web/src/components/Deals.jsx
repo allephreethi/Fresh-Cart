@@ -16,7 +16,7 @@ const fetchDealsFromAPI = async () => {
           price: "₹399",
           oldPrice: "₹599",
           image: `${process.env.PUBLIC_URL}/img/premium-almonds.png`,
-          endsIn: 2 * 60 * 60, // 2 hours
+          endsIn: 2 * 60 * 60,
           rating: 4,
         },
         {
@@ -25,7 +25,7 @@ const fetchDealsFromAPI = async () => {
           price: "₹149",
           oldPrice: "₹229",
           image: `${process.env.PUBLIC_URL}/img/chocolate-chip-cookies.png`,
-          endsIn: 90 * 60, // 1.5 hours
+          endsIn: 90 * 60,
           rating: 5,
         },
         {
@@ -34,7 +34,7 @@ const fetchDealsFromAPI = async () => {
           price: "₹749",
           oldPrice: "₹999",
           image: `${process.env.PUBLIC_URL}/img/cashew-nuts.png`,
-          endsIn: 45 * 60, // 45 minutes
+          endsIn: 45 * 60,
           rating: 3,
         },
       ]);
@@ -50,10 +50,11 @@ function formatTime(seconds) {
 }
 
 export default function Deals() {
-  const { addToCart, toggleCart, showToast } = useAppContext();
+  const { addToCart, toggleCart, showToast, cartItems } = useAppContext();
 
   const [deals, setDeals] = useState([]);
   const [timeLeft, setTimeLeft] = useState({});
+  const [pendingCartItemId, setPendingCartItemId] = useState(null);
 
   const loadDeals = useCallback(async () => {
     const data = await fetchDealsFromAPI();
@@ -67,11 +68,9 @@ export default function Deals() {
 
   useEffect(() => {
     loadDeals();
-
     const refreshInterval = setInterval(() => {
       loadDeals();
     }, 60 * 1000);
-
     return () => clearInterval(refreshInterval);
   }, [loadDeals]);
 
@@ -85,9 +84,19 @@ export default function Deals() {
         return updated;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
+
+  // 🛠 Detect when item is successfully added to cart
+  useEffect(() => {
+    if (pendingCartItemId !== null) {
+      const exists = cartItems.find((item) => item.id === pendingCartItemId);
+      if (exists) {
+        toggleCart(true);
+        setPendingCartItemId(null);
+      }
+    }
+  }, [cartItems, pendingCartItemId, toggleCart]);
 
   const handleGrabDeal = (deal) => {
     addToCart({
@@ -97,13 +106,8 @@ export default function Deals() {
       quantity: 1,
       image: deal.image,
     });
-
     showToast(`${deal.name} added to cart!`, "success");
-
-    // 🛠 Fix: delay cart opening to avoid "Your cart is empty"
-    setTimeout(() => {
-      toggleCart(true);
-    }, 100);
+    setPendingCartItemId(deal.id);
   };
 
   const activeDeals = deals.filter((deal) => timeLeft[deal.id] > 0);
