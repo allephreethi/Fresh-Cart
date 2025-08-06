@@ -19,17 +19,33 @@ import Help from './pages/Help';
 import AccountSettings from './pages/AccountSettings';
 
 export default function App() {
-  const { locationPopupOpen, toastMessage, toastType } = useAppContext();
+  const {
+    locationPopupOpen,
+    toastMessage,
+    toastType,
+    wishlistOpen,
+    cartOpen,
+  } = useAppContext();
   const { isExpanded } = useSidebar();
 
+  // Determine the right margin based on panel state
+  let rightMargin = 'mr-0';
+  if (cartOpen) {
+    rightMargin = 'mr-96'; // 24rem for CartPanel
+  } else if (wishlistOpen) {
+    rightMargin = 'mr-80'; // 20rem for WishlistPanel
+  }
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={process.env.PUBLIC_URL}>
+      {/* Sidebar */}
       <Sidebar />
 
+      {/* Main Content */}
       <div
         className={`transition-all duration-300 min-h-screen flex flex-col ${
           isExpanded ? 'ml-48' : 'ml-16'
-        }`}
+        } ${rightMargin}`}
       >
         <Header />
         <main className="flex-1 p-4 mt-14">
@@ -40,21 +56,26 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/help" element={<Help />} />
             <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
       </div>
 
+      {/* Footer */}
       <div className="w-full">
         <Footer />
       </div>
 
+      {/* Panels */}
       <WishlistPanel />
       <NotificationPanel />
       <CartPanel />
       <FloatingCartButton />
 
+      {/* Location Popup */}
       {locationPopupOpen && <LocationPopup />}
 
+      {/* Toast Notification */}
       {toastMessage && (
         <div
           className={`fixed bottom-6 right-6 text-white px-5 py-3 rounded-xl shadow-lg z-50 animate-fade-in-out transition-all duration-300 ${

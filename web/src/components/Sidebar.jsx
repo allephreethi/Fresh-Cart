@@ -34,7 +34,7 @@ export default function Sidebar() {
       <div className="flex items-center justify-center h-16 border-b border-gray-200">
         <motion.img
           whileHover={{ scale: 1.1 }}
-          src="/img/profile.png"
+           src={`${process.env.PUBLIC_URL}/img/profile.png`}
           alt="Profile"
           className="w-9 h-9 rounded-full object-cover"
         />

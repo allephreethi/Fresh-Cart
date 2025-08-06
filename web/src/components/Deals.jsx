@@ -15,7 +15,7 @@ const fetchDealsFromAPI = async () => {
           name: "Premium Almonds (500g)",
           price: "₹399",
           oldPrice: "₹599",
-          image: "/img/premium-almonds.png",
+          image: `${process.env.PUBLIC_URL}/img/premium-almonds.png`,
           endsIn: 2 * 60 * 60, // 2 hours
           rating: 4,
         },
@@ -24,7 +24,7 @@ const fetchDealsFromAPI = async () => {
           name: "Chocolate Chip Cookies",
           price: "₹149",
           oldPrice: "₹229",
-          image: "/img/chocolate-chip-cookies.png",
+          image: `${process.env.PUBLIC_URL}/img/chocolate-chip-cookies.png`,
           endsIn: 90 * 60, // 1.5 hours
           rating: 5,
         },
@@ -33,7 +33,7 @@ const fetchDealsFromAPI = async () => {
           name: "Cashew Nuts (1kg)",
           price: "₹749",
           oldPrice: "₹999",
-          image: "/img/cashew-nuts.png",
+          image: `${process.env.PUBLIC_URL}/img/cashew-nuts.png`,
           endsIn: 45 * 60, // 45 minutes
           rating: 3,
         },

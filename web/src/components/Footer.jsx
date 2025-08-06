@@ -1,16 +1,16 @@
 export default function Footer() {
   return (
     <footer
-      className="relative z-20 w-full text-white py-10 px-6 sm:px-10 lg:px-20 animate-fade-in-up"
+      className="relative z-20 w-full text-gray-800 py-10 px-6 sm:px-10 lg:px-20 animate-fade-in-up"
       style={{
-        background: "linear-gradient(135deg, #3E5F44, #5E936C, #93DA97, #E8FFD7)",
+        background: "linear-gradient(135deg, #E8FFD7, #ffffff, #93DA97)",
       }}
     >
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
         {/* About */}
         <div className="transform transition duration-500 hover:scale-105">
           <h3 className="text-xl font-semibold mb-2">FreshCart</h3>
-          <p className="text-sm leading-relaxed text-white/90">
+          <p className="text-sm leading-relaxed text-gray-700">
             Your daily dose of farm-fresh groceries delivered with care and quality.
             Experience organic living at its best.
           </p>
@@ -19,7 +19,7 @@ export default function Footer() {
         {/* Quick Links */}
         <nav className="transform transition duration-500 hover:scale-105">
           <h3 className="text-xl font-semibold mb-2">Quick Links</h3>
-          <ul className="text-sm space-y-1 text-white/90">
+          <ul className="text-sm space-y-1 text-gray-700">
             {[
               { name: "Home", href: "/" },
               { name: "Products", href: "/products" },
@@ -30,7 +30,7 @@ export default function Footer() {
               <li key={link.name}>
                 <a
                   href={link.href}
-                  className="hover:text-white transition duration-300 ease-in-out"
+                  className="hover:text-black transition duration-300 ease-in-out"
                 >
                   {link.name}
                 </a>
@@ -42,7 +42,7 @@ export default function Footer() {
         {/* Contact Info */}
         <div className="transform transition duration-500 hover:scale-105">
           <h3 className="text-xl font-semibold mb-2">Contact</h3>
-          <ul className="text-sm space-y-2 text-white/90">
+          <ul className="text-sm space-y-2 text-gray-700">
             <li>📍 123 Farm Fresh Lane</li>
             <li>☎️ +1 (555) 123-4567</li>
             <li>✉️ support@freshcart.com</li>
@@ -52,7 +52,7 @@ export default function Footer() {
         {/* Socials */}
         <div className="transform transition duration-500 hover:scale-105">
           <h3 className="text-xl font-semibold mb-2">Follow Us</h3>
-          <div className="flex gap-4 text-white text-xl">
+          <div className="flex gap-4 text-gray-700 text-xl">
             {[
               { icon: "instagram", url: "https://instagram.com" },
               { icon: "facebook", url: "https://facebook.com" },
@@ -64,7 +64,7 @@ export default function Footer() {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-gray-200 transition-transform duration-300 transform hover:scale-110"
+                className="hover:text-black transition-transform duration-300 transform hover:scale-110"
               >
                 <i className={`fab fa-${social.icon}`}></i> {/* Requires FontAwesome */}
               </a>
@@ -74,9 +74,9 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto mt-10 text-center text-sm border-t border-white/20 pt-4 animate-fade-in-up delay-200">
+      <div className="max-w-7xl mx-auto mt-10 text-center text-sm border-t border-gray-300 pt-4 animate-fade-in-up delay-200 text-gray-600">
         © 2025 FreshCart. Made with ❤️ by Preethi. |{" "}
-        <a href="#" className="hover:underline transition-colors duration-300">
+        <a href="/help" className="hover:underline transition-colors duration-300">
           Privacy Policy
         </a>
       </div>

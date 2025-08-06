@@ -10,9 +10,10 @@ const allProducts = [
     id: 1,
     title: 'Fresh Apples (1kg)',
     price: 150,
+    originalPrice: 200,
     quantity: '1kg',
     rating: 4.3,
-    image: '/img/fresh-apples.png',
+    image: `${process.env.PUBLIC_URL}/img/fresh-apples.png`,
     description: 'Crisp and sweet apples, farm fresh and organically grown.',
     tags: ['New', 'Organic'],
     category: 'fruits',
@@ -23,7 +24,7 @@ const allProducts = [
     price: 65,
     quantity: '1L',
     rating: 4.6,
-    image: '/img/amul-milk-1l-pack.png',
+    image: `${process.env.PUBLIC_URL}/img/amul-milk-1l-pack.png`,
     description: 'Toned milk for your daily nutrition and health needs.',
     tags: ['Hot'],
     category: 'dairy',
@@ -32,9 +33,10 @@ const allProducts = [
     id: 3,
     title: 'Aashirvaad Atta 5kg',
     price: 240,
+    originalPrice: 270,
     quantity: '5kg',
     rating: 4.5,
-    image: '/img/aashirvaad-atta-5kg.png',
+    image: `${process.env.PUBLIC_URL}/img/aashirvaad-atta-5kg.png`,
     description: 'Whole wheat flour for soft rotis and parathas.',
     tags: ['New'],
     category: 'packaged-food',
@@ -45,7 +47,7 @@ const allProducts = [
     price: 90,
     quantity: '150g',
     rating: 4.7,
-    image: '/img/cadbury-dairy-milk-chocolate.png',
+    image: `${process.env.PUBLIC_URL}/img/cadbury-dairy-milk-chocolate.png`,
     description: 'Rich and creamy chocolate to sweeten your day.',
     tags: ['Hot'],
     category: 'packaged-food',
@@ -54,9 +56,10 @@ const allProducts = [
     id: 5,
     title: 'Country Eggs (6pcs)',
     price: 60,
+    originalPrice: 75,
     quantity: '6 pcs',
     rating: 4.4,
-    image: '/img/country-eggs-6pcs.png',
+    image: `${process.env.PUBLIC_URL}/img/country-eggs-6pcs.png`,
     description: 'Farm-fresh country eggs full of protein.',
     tags: ['Organic'],
     category: 'eggs',
@@ -67,7 +70,7 @@ const allProducts = [
     price: 55,
     quantity: '100g',
     rating: 4.3,
-    image: '/img/everest-chicken-masala-100g.png',
+    image: `${process.env.PUBLIC_URL}/img/everest-chicken-masala-100g.png`,
     description: 'Flavorful masala for tasty chicken dishes.',
     tags: ['Spicy'],
     category: 'masalas',
@@ -76,9 +79,10 @@ const allProducts = [
     id: 7,
     title: 'California Almonds 500g',
     price: 399,
+    originalPrice: 450,
     quantity: '500g',
     rating: 4.8,
-    image: '/img/california-almonds-500g.png',
+    image: `${process.env.PUBLIC_URL}/img/california-almonds-500g.png`,
     description: 'Premium quality almonds for daily health.',
     tags: ['Hot', 'Organic'],
     category: 'dry-fruits',
@@ -89,7 +93,7 @@ const allProducts = [
     price: 210,
     quantity: '400g',
     rating: 4.2,
-    image: '/img/yummiez-chicken-nuggets-400g.png',
+    image: `${process.env.PUBLIC_URL}/img/yummiez-chicken-nuggets-400g.png`,
     description: 'Frozen and ready-to-fry crispy chicken nuggets.',
     tags: ['Hot'],
     category: 'frozen-food',
@@ -100,7 +104,7 @@ const allProducts = [
     price: 55,
     quantity: '800g',
     rating: 4.6,
-    image: '/img/parle-g-biscuits-800g.png',
+    image: `${process.env.PUBLIC_URL}/img/parle-g-biscuits-800g.png`,
     description: 'Classic biscuits for tea-time munching.',
     tags: ['Classic'],
     category: 'biscuits',
@@ -109,9 +113,10 @@ const allProducts = [
     id: 10,
     title: 'Pepsi 1.25L',
     price: 45,
+    originalPrice: 60,
     quantity: '1.25L',
     rating: 4.1,
-    image: '/img/pepsi-1-25l.png',
+    image: `${process.env.PUBLIC_URL}/img/pepsi-1-25l.png`,
     description: 'Chilled carbonated beverage for refreshment.',
     tags: ['Chilled'],
     category: 'cold-drinks',
@@ -122,7 +127,7 @@ const allProducts = [
     price: 20,
     quantity: '52g',
     rating: 4.4,
-    image: '/img/lays-classic-salted-chips.png',
+    image: `${process.env.PUBLIC_URL}/img/lays-classic-salted-chips.png`,
     description: 'Crispy potato chips with classic salted flavor.',
     tags: ['Hot'],
     category: 'snacks',
@@ -133,7 +138,7 @@ const allProducts = [
     price: 250,
     quantity: '500g',
     rating: 4.5,
-    image: '/img/tata-tea-gold.png',
+    image: `${process.env.PUBLIC_URL}/img/tata-tea-gold.png`,
     description: 'Strong and flavorful tea blend.',
     tags: ['Refreshing'],
     category: 'tea-coffee',
@@ -142,9 +147,10 @@ const allProducts = [
     id: 13,
     title: 'Bru Instant Coffee 100g',
     price: 130,
+    originalPrice: 150,
     quantity: '100g',
     rating: 4.6,
-    image: '/img/bru-instant-coffee-100g.png',
+    image: `${process.env.PUBLIC_URL}/img/bru-instant-coffee-100g.png`,
     description: 'Instant coffee for a quick caffeine fix.',
     tags: ['Hot'],
     category: 'tea-coffee',
@@ -155,7 +161,7 @@ const allProducts = [
     price: 95,
     quantity: '1kg',
     rating: 4.2,
-    image: '/img/frozen-green-peas.png',
+    image: `${process.env.PUBLIC_URL}/img/frozen-green-peas.png`,
     description: 'Hygienically packed frozen green peas.',
     tags: ['Frozen'],
     category: 'frozen-food',
@@ -166,7 +172,7 @@ const allProducts = [
     price: 280,
     quantity: '500g',
     rating: 4.9,
-    image: '/img/amul-butter-500g.png',
+    image: `${process.env.PUBLIC_URL}/img/amul-butter-500g.png`,
     description: 'Rich, creamy butter for spreading and cooking.',
     tags: ['Dairy'],
     category: 'dairy',
@@ -177,7 +183,7 @@ const allProducts = [
     price: 55,
     quantity: '12 pcs',
     rating: 4.4,
-    image: '/img/bananas-1-dozen.png',
+    image: `${process.env.PUBLIC_URL}/img/bananas-1-dozen.png`,
     description: 'Naturally ripened bananas full of nutrients.',
     tags: ['Fresh'],
     category: 'fruits',
@@ -188,7 +194,7 @@ const allProducts = [
     price: 125,
     quantity: '500g',
     rating: 4.3,
-    image: '/img/kissan-mixed-fruit-jam-500g.png',
+    image: `${process.env.PUBLIC_URL}/img/kissan-mixed-fruit-jam-500g.png`,
     description: 'Sweet and tangy fruit jam for your toast.',
     tags: ['Kids'],
     category: 'packaged-food',
@@ -199,7 +205,7 @@ const allProducts = [
     price: 60,
     quantity: '200g',
     rating: 4.6,
-    image: '/img/haldiram-bhujia-200g.png',
+    image: `${process.env.PUBLIC_URL}/img/haldiram-bhujia-200g.png`,
     description: 'Crispy spicy bhujia snack for every mood.',
     tags: ['Spicy'],
     category: 'snacks',
@@ -210,7 +216,7 @@ const allProducts = [
     price: 35,
     quantity: '250g',
     rating: 4.5,
-    image: '/img/britannia-good-day-cookies.png',
+    image: `${process.env.PUBLIC_URL}/img/britannia-good-day-cookies.png`,
     description: 'Crunchy and buttery cookies with cashews.',
     tags: ['Hot'],
     category: 'biscuits',
@@ -221,7 +227,7 @@ const allProducts = [
     price: 22,
     quantity: '1kg',
     rating: 4.7,
-    image: '/img/tata-salt-1kg.png',
+    image: `${process.env.PUBLIC_URL}/img/tata-salt-1kg.png`,
     description: 'Iodized salt for daily cooking needs.',
     tags: ['Essential'],
     category: 'groceries',
@@ -232,7 +238,7 @@ const allProducts = [
     price: 210,
     quantity: '250g',
     rating: 4.5,
-    image: '/img/organic-cashews-250g.png',
+    image: `${process.env.PUBLIC_URL}/img/organic-cashews-250g.png`,
     description: 'Rich, creamy cashews with organic certification.',
     tags: ['Organic'],
     category: 'dry-fruits',
@@ -243,7 +249,7 @@ const allProducts = [
     price: 130,
     quantity: '1L',
     rating: 4.4,
-    image: '/img/fortune-sunlite-refined-sunflower-oil-1l.png',
+    image: `${process.env.PUBLIC_URL}/img/fortune-sunlite-refined-sunflower-oil-1l.png`,
     description: 'Healthy refined sunflower oil for everyday cooking.',
     tags: ['Popular', 'Value Pack'],
     category: 'groceries',
@@ -252,14 +258,16 @@ const allProducts = [
     id: 24,
     title: 'India Gate Basmati Rice (5kg)',
     price: 500,
+    originalPrice: 580,
     quantity: '5kg',
     rating: 4.6,
-    image: '/img/india-gate-basmati-rice-5kg.png',
+    image: `${process.env.PUBLIC_URL}/img/india-gate-basmati-rice-5kg.png`,
     description: 'Premium aged basmati rice for rich aroma and taste.',
     tags: ['Premium', 'Best Seller'],
     category: 'groceries',
   },
 ];
+
 
 const tagList = ['New', 'Hot', 'Organic'];
 
@@ -429,10 +437,25 @@ export default function Products() {
               </div>
 
               <div className="flex justify-between items-center mt-2">
-                <span className="text-green-800 font-bold text-sm">
-                  ₹{product.price}
-                </span>
+                {/* Price Section */}
+                <div className="flex flex-col">
+                  {product.originalPrice && product.originalPrice > product.price ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-400 line-through text-xs">
+                        ₹{product.originalPrice}
+                      </span>
+                      <span className="text-green-800 font-bold text-sm">
+                        ₹{product.price}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-green-800 font-bold text-sm">
+                      ₹{product.price}
+                    </span>
+                  )}
+                </div>
 
+                {/* Cart Actions */}
                 {quantity > 0 ? (
                   <div className="flex items-center gap-2">
                     <button

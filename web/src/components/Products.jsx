@@ -8,9 +8,10 @@ const productList = [
     id: 1,
     title: "Fresh Apples (1kg)",
     price: 150,
+    originalPrice: 200,
     quantity: "1kg",
     rating: 4.3,
-    image: "/img/fresh-apples.png",
+    image: `${process.env.PUBLIC_URL}/img/fresh-apples.png`,
     description: "Crisp and sweet apples, farm fresh and organically grown.",
   },
   {
@@ -19,25 +20,27 @@ const productList = [
     price: 65,
     quantity: "1L",
     rating: 4.6,
-    image: "/img/amul-milk.png",
+    image: `${process.env.PUBLIC_URL}/img/amul-milk.png`,
     description: "Toned milk for your daily nutrition and health needs.",
   },
   {
     id: 3,
     title: "Farm Fresh Eggs (12 pcs)",
     price: 90,
+    originalPrice: 110,
     quantity: "12 pcs",
     rating: 4.4,
-    image: "/img/farm-fresh-eggs.png",
+    image: `${process.env.PUBLIC_URL}/img/farm-fresh-eggs.png`,
     description: "High-protein fresh eggs straight from healthy farms.",
   },
   {
     id: 4,
     title: "Dry Fruits Mix (500g)",
     price: 399,
+    originalPrice: 450,
     quantity: "500g",
     rating: 4.1,
-    image: "/img/dry-fruits-mix.png",
+    image: `${process.env.PUBLIC_URL}/img/dry-fruits-mix.png`,
     description: "A nutritious mix of almonds, cashews, raisins and pistachios.",
   },
   {
@@ -46,7 +49,7 @@ const productList = [
     price: 180,
     quantity: "1L",
     rating: 4.2,
-    image: "/img/cold-pressed-sunflower-oil.png",
+    image: `${process.env.PUBLIC_URL}/img/cold-pressed-sunflower-oil.png`,
     description: "Heart-healthy sunflower oil for daily cooking.",
   },
   {
@@ -55,7 +58,7 @@ const productList = [
     price: 89,
     quantity: "200g",
     rating: 4.0,
-    image: "/img/spicy-masala-powder.png",
+    image: `${process.env.PUBLIC_URL}/img/spicy-masala-powder.png`,
     description: "Add fiery flavor to your meals with this masala blend.",
   },
   {
@@ -64,16 +67,17 @@ const productList = [
     price: 55,
     quantity: "600g",
     rating: 4.3,
-    image: "/img/britannia-good-day-biscuits.png",
+    image: `${process.env.PUBLIC_URL}/img/britannia-good-day-biscuits.png`,
     description: "Crunchy and sweet biscuits for every tea-time.",
   },
   {
     id: 8,
     title: "Tata Tea Gold (500g)",
     price: 210,
+    originalPrice: 240,
     quantity: "500g",
     rating: 4.5,
-    image: "/img/tata-tea-gold.png",
+    image: `${process.env.PUBLIC_URL}/img/tata-tea-gold.png`,
     description: "Strong aroma-rich tea blend for a perfect start.",
   },
   {
@@ -82,7 +86,7 @@ const productList = [
     price: 85,
     quantity: "2L",
     rating: 3.9,
-    image: "/img/pepsi-2l-bottle.png",
+    image: `${process.env.PUBLIC_URL}/img/pepsi-2l-bottle.png`,
     description: "Chilled fizzy refreshment for every celebration.",
   },
   {
@@ -91,16 +95,17 @@ const productList = [
     price: 120,
     quantity: "1kg",
     rating: 4.2,
-    image: "/img/frozen-green-peas.png",
+    image: `${process.env.PUBLIC_URL}/img/frozen-green-peas.png`,
     description: "Fresh-frozen green peas, ready to cook.",
   },
   {
     id: 11,
     title: "Maggi 12 Pack (560g)",
     price: 115,
+    originalPrice: 135,
     quantity: "560g",
     rating: 4.7,
-    image: "/img/maggi-12-pack.png",
+    image: `${process.env.PUBLIC_URL}/img/maggi-12-pack.png`,
     description: "Instant noodles – everyone's favorite snack!",
   },
 ];
@@ -117,13 +122,11 @@ export default function Products({ limit = productList.length, title = "All Prod
   const [quantities, setQuantities] = useState({});
   const location = useLocation();
 
-  // Parse search only once per location change
   const searchQuery = useMemo(() => {
     const queryParams = new URLSearchParams(location.search);
     return queryParams.get("search")?.toLowerCase() || "";
   }, [location.search]);
 
-  // Filtered products with memoization
   const filteredProducts = useMemo(() => {
     return productList
       .filter(
@@ -134,7 +137,6 @@ export default function Products({ limit = productList.length, title = "All Prod
       .slice(0, limit);
   }, [searchQuery, limit]);
 
-  // Sync quantities with cart
   useEffect(() => {
     const updated = {};
     cartItems.forEach((item) => {
@@ -228,7 +230,14 @@ export default function Products({ limit = productList.length, title = "All Prod
 
                 {/* Price & Cart */}
                 <div className="flex justify-between items-center mt-3 z-10">
-                  <span className="text-[#5E936C] font-bold">₹{product.price}</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[#5E936C] font-bold">₹{product.price}</span>
+                    {product.originalPrice && (
+                      <span className="text-sm text-gray-400 line-through">
+                        ₹{product.originalPrice}
+                      </span>
+                    )}
+                  </div>
 
                   {quantity > 0 ? (
                     <div className="flex items-center gap-2">

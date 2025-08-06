@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Search,
   X,
+  Menu,
 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { useSidebar } from '../context/SidebarContext';
@@ -52,22 +53,33 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md shadow z-50 border-b px-4 flex items-center justify-between flex-wrap">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md shadow z-50 border-b px-4 flex items-center justify-between">
       {/* Left Section */}
-      <div className="flex items-center gap-3 min-w-[8rem]">
-        <button
+      <div className="flex items-center gap-3">
+        {/* Logo */}
+        <img
+          src={`${process.env.PUBLIC_URL}/img/logo.png`}
+          alt="Logo"
+          className="h-8 sm:h-9 w-auto"
+        />
+
+        {/* Sidebar Toggle with Animation */}
+        <motion.button
+          whileHover={{ rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
           onClick={toggleSidebar}
-          className="text-2xl text-gray-700 hover:text-green-600"
+          className="text-gray-700 hover:text-green-600"
         >
-          &#9776;
-        </button>
-        <img src="/img/logo.png" alt="Logo" className="h-8 sm:h-9 w-auto" />
+          <Menu size={22} />
+        </motion.button>
+
+        {/* Premium Button - hidden on small screens */}
         <button className="hidden sm:inline-block ml-1 px-3 py-1 text-xs font-semibold rounded-full text-white bg-gradient-to-r from-green-700 via-green-500 to-lime-400 hover:from-green-600 hover:to-lime-300 transition-all">
           Premium++
         </button>
       </div>
 
-      {/* Center: Search */}
+      {/* Center: Search - only visible on sm+ screens */}
       <div className="relative flex-grow max-w-md mx-2 hidden sm:block">
         <Search
           className="absolute left-3 top-2.5 text-gray-400 cursor-pointer hover:text-green-600"
@@ -101,7 +113,7 @@ export default function Header() {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-3 min-w-fit">
+      <div className="flex items-center gap-3">
         <Heart
           size={20}
           onClick={() => toggleWishlist(true)}
@@ -112,6 +124,7 @@ export default function Header() {
           onClick={toggleNotifications}
           className="text-gray-600 hover:text-green-600 cursor-pointer"
         />
+        {/* Location - hidden on small screens */}
         <div
           onClick={openLocationPopup}
           className="hidden sm:flex items-center gap-1 text-gray-600 hover:text-green-600 cursor-pointer text-sm"
@@ -127,7 +140,7 @@ export default function Header() {
           onMouseLeave={() => setDropdownOpen(false)}
         >
           <img
-            src="/img/profile.png"
+            src={`${process.env.PUBLIC_URL}/img/profile.png`}
             alt="Profile"
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-gray-300 object-cover"
           />
@@ -147,22 +160,38 @@ export default function Header() {
               >
                 <ul className="text-sm text-gray-700 divide-y">
                   <li>
-                    <Link to="/orders" onClick={() => setDropdownOpen(false)} className="block px-4 py-2 hover:bg-gray-100">
+                    <Link
+                      to="/orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
                       My Orders
                     </Link>
                   </li>
                   <li>
-                    <Link to="/products" onClick={() => setDropdownOpen(false)} className="block px-4 py-2 hover:bg-gray-100">
+                    <Link
+                      to="/products"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
                       Products
                     </Link>
                   </li>
                   <li>
-                    <Link to="/account-settings" onClick={() => setDropdownOpen(false)} className="block px-4 py-2 hover:bg-gray-100">
+                    <Link
+                      to="/account-settings"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
                       Account Settings
                     </Link>
                   </li>
                   <li>
-                    <Link to="/help" onClick={() => setDropdownOpen(false)} className="block px-4 py-2 hover:bg-gray-100">
+                    <Link
+                      to="/help"
+                      onClick={() => setDropdownOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100"
+                    >
                       Help
                     </Link>
                   </li>
