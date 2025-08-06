@@ -1,6 +1,7 @@
 export default function Footer() {
   return (
     <footer
+      id="footer"
       className="relative z-20 w-full text-gray-800 py-10 px-6 sm:px-10 lg:px-20 animate-fade-in-up"
       style={{
         background: "linear-gradient(135deg, #E8FFD7, #ffffff, #93DA97)",

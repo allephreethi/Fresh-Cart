@@ -21,20 +21,21 @@ export default function CartPanel() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [hasCelebrated, setHasCelebrated] = useState(false); // To avoid repeated confetti
 
-  const total = useMemo(() =>
-    cartItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0),
+  const total = useMemo(
+    () =>
+      cartItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0),
     [cartItems]
   );
 
   const freeShippingThreshold = 1000;
   const shippingCost = total >= freeShippingThreshold ? 0 : 49;
-  const shippingProgress = useMemo(() =>
-    Math.min((total / freeShippingThreshold) * 100, 100),
+  const shippingProgress = useMemo(
+    () => Math.min((total / freeShippingThreshold) * 100, 100),
     [total]
   );
 
-  const finalTotal = useMemo(() =>
-    appliedCoupon ? total * (1 - appliedCoupon.discount) : total,
+  const finalTotal = useMemo(
+    () => (appliedCoupon ? total * (1 - appliedCoupon.discount) : total),
     [total, appliedCoupon]
   );
 
@@ -75,7 +76,7 @@ export default function CartPanel() {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'tween' }}
-          className="fixed top-0 right-0 h-full w-full sm:w-96 max-w-full bg-white shadow-xl z-50 flex flex-col border-l"
+          className="fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 max-w-full bg-white shadow-xl z-50 flex flex-col border-l"
         >
           {/* Header */}
           <div className="flex justify-between items-center p-5 border-b">

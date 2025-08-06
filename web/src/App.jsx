@@ -28,27 +28,25 @@ export default function App() {
   } = useAppContext();
   const { isExpanded } = useSidebar();
 
-  // Determine the right margin based on panel state
+  // Right margin for panels
   let rightMargin = 'mr-0';
-  if (cartOpen) {
-    rightMargin = 'mr-96'; // 24rem for CartPanel
-  } else if (wishlistOpen) {
-    rightMargin = 'mr-80'; // 20rem for WishlistPanel
-  }
+  if (cartOpen) rightMargin = 'mr-96';
+  else if (wishlistOpen) rightMargin = 'mr-80';
 
   return (
     <BrowserRouter basename={process.env.PUBLIC_URL}>
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
+      {/* Main Content (Header + Main) */}
       <div
-        className={`transition-all duration-300 min-h-screen flex flex-col ${
+        className={`flex flex-col min-h-screen transition-all duration-300 ${
           isExpanded ? 'ml-48' : 'ml-16'
         } ${rightMargin}`}
       >
         <Header />
-        <main className="flex-1 p-4 mt-14">
+
+        <main className="flex-1 p-4 mt-14 pb-32">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
@@ -61,10 +59,8 @@ export default function App() {
         </main>
       </div>
 
-      {/* Footer */}
-      <div className="w-full">
-        <Footer />
-      </div>
+      {/* Footer - Placed outside the content wrapper for full width */}
+      <Footer />
 
       {/* Panels */}
       <WishlistPanel />
