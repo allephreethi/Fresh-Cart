@@ -903,7 +903,7 @@ export default function Products() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [sortOption, setSortOption] = useState('');
   const [searchQueryState, setSearchQueryState] = useState(searchQueryFromURL);
-  const [selectedProduct, setSelectedProduct] = useState(null); // ✅ for modal
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const {
     toggleWishlistItem,
@@ -958,15 +958,48 @@ export default function Products() {
     <div className="p-4">
       <CategoriesSection onCategorySelect={(slug) => setSelectedCategory(slug)} />
 
+      {/* Active Filter Chips */}
+      {(selectedTags.length > 0 || priceRange < 500 || sortOption) && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
+          {selectedTags.map((tag) => (
+            <span key={tag} className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
+              {tag}
+            </span>
+          ))}
+          {priceRange < 500 && (
+            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+              Under ₹{priceRange}
+            </span>
+          )}
+          {sortOption && (
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+              {sortOption.replace('-', ' ')}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setPriceRange(500);
+              setSelectedTags([]);
+              setSortOption('');
+            }}
+            className="text-red-500 ml-auto hover:underline"
+          >
+            Reset Filters
+          </button>
+        </div>
+      )}
+
       {/* Filters */}
       <motion.div
-        className="bg-white shadow rounded-lg p-3 mb-6 text-sm grid grid-cols-1 md:grid-cols-3 gap-4"
+        className="bg-white shadow rounded-lg p-3 mb-6 text-sm grid grid-cols-1 md:grid-cols-3 gap-4 sticky top-14 z-10"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
         <div className="flex flex-col gap-1">
-          <label className="text-gray-600 font-medium text-xs">Max Price</label>
+          <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
+            Max Price
+          </label>
           <input
             type="range"
             min="0"
@@ -981,35 +1014,41 @@ export default function Products() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-gray-600 font-medium text-xs">Tags</label>
+          <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
+            Tags
+          </label>
           <div className="flex flex-wrap gap-2">
             {tagList.map((tag) => (
-              <button
+              <motion.button
                 key={tag}
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
                 onClick={() => toggleTag(tag)}
-                className={`px-2 py-1 rounded-full border text-xs transition ${
+                className={`px-2 py-1 rounded-full border text-xs transition font-medium ${
                   selectedTags.includes(tag)
                     ? 'bg-green-600 text-white border-green-600'
                     : 'bg-gray-100 text-gray-800 hover:bg-green-100'
                 }`}
               >
                 {tag}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-gray-600 font-medium text-xs">Sort By</label>
+          <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
+            Sort By
+          </label>
           <select
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
             className="border rounded px-2 py-1 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
           >
             <option value="">Default</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Rating</option>
+            <option value="price-low">⬇️ Price: Low to High</option>
+            <option value="price-high">⬆️ Price: High to Low</option>
+            <option value="rating">⭐ Rating</option>
           </select>
         </div>
       </motion.div>
@@ -1029,7 +1068,7 @@ export default function Products() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="relative rounded-xl shadow hover:shadow-md transition-all p-3 flex flex-col justify-between overflow-hidden bg-white cursor-pointer"
-              onClick={() => setSelectedProduct(product)} // ✅ open modal
+              onClick={() => setSelectedProduct(product)}
             >
               <button
                 onClick={(e) => {
@@ -1049,12 +1088,8 @@ export default function Products() {
                 className="w-full h-36 object-contain mb-2 rounded"
               />
 
-              <h3 className="font-semibold text-xs text-[#3E5F44]">
-                {product.title}
-              </h3>
-              <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                {product.description}
-              </p>
+              <h3 className="font-semibold text-xs text-[#3E5F44]">{product.title}</h3>
+              <p className="text-xs text-gray-700 mt-1 line-clamp-2">{product.description}</p>
 
               <div className="flex items-center justify-between text-xs mt-1">
                 <span className="text-gray-800">{product.rating.toFixed(1)} rating</span>
@@ -1115,7 +1150,7 @@ export default function Products() {
         })}
       </div>
 
-      {/* ✅ Modal */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}

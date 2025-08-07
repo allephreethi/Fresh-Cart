@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Heart } from "lucide-react";
+import { useAppContext } from "../context/AppContext";
 
 const backdropVariants = {
   hidden: { opacity: 0, backdropFilter: "blur(0px)" },
@@ -45,6 +46,17 @@ const contentVariants = {
 };
 
 export default function ProductDetailModal({ product, onClose }) {
+  const {
+    addToCart,
+    cartItems,
+    toggleWishlistItem,
+    isInWishlist,
+    showToast,
+  } = useAppContext();
+
+  const isWishlisted = isInWishlist(product?.id);
+  const alreadyInCart = cartItems.some((item) => item.id === product?.id);
+
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose();
@@ -79,6 +91,7 @@ export default function ProductDetailModal({ product, onClose }) {
           exit="exit"
           tabIndex={-1}
         >
+          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-5 right-5 text-gray-500 hover:text-gray-900 transition transform hover:scale-110"
@@ -87,24 +100,54 @@ export default function ProductDetailModal({ product, onClose }) {
             <X size={24} />
           </button>
 
-          {/* Left: Image centered vertically */}
+          {/* Left: Image + Wishlist + Cart */}
           <motion.div
-            className="flex items-center justify-center w-full h-full rounded-lg shadow-lg bg-gradient-to-br from-green-50 to-green-100 p-4"
+            className="flex flex-col items-center justify-between w-full h-full rounded-lg shadow-lg bg-gradient-to-br from-green-50 to-green-100 p-4 relative"
             variants={imageVariants}
           >
+            {/* Wishlist */}
+            <button
+              onClick={() => toggleWishlistItem(product)}
+              className="absolute top-3 left-3 text-white bg-[#3E5F44] rounded-full p-1 hover:bg-[#5E936C] transition"
+              title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              aria-label="Toggle Wishlist"
+            >
+              <Heart
+                size={20}
+                fill={isWishlisted ? "#f43f5e" : "none"}
+                color={isWishlisted ? "#f43f5e" : "#fff"}
+              />
+            </button>
+
+            {/* Product Image */}
             <img
               src={product.image}
               alt={product.title}
               className="h-auto max-h-[250px] w-auto object-contain rounded-lg"
               loading="lazy"
             />
+
+            {/* Add to Cart */}
+            <button
+              onClick={() => {
+                if (!alreadyInCart) {
+                  addToCart(product);
+                  showToast(`${product.title} added to cart`, "success");
+                }
+              }}
+              className={`mt-4 px-4 py-2 rounded-lg shadow transition ${
+                alreadyInCart
+                  ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  : "bg-[#5E936C] text-white hover:bg-[#4b7857]"
+              }`}
+              disabled={alreadyInCart}
+            >
+              {alreadyInCart ? "Already in Cart" : "Add to Cart"}
+            </button>
           </motion.div>
 
-          {/* Right: Content */}
-          <motion.div
-            className="flex flex-col pr-1"
-            variants={contentVariants}
-          >
+          {/* Right: Details */}
+          <motion.div className="flex flex-col pr-1" variants={contentVariants}>
             <h2
               id="product-title"
               className="text-2xl font-extrabold text-[#3E5F44] mb-4 break-words"
@@ -112,9 +155,7 @@ export default function ProductDetailModal({ product, onClose }) {
               {product.title}
             </h2>
 
-            <p className="text-base text-gray-700 mb-3">
-              {product.description}
-            </p>
+            <p className="text-base text-gray-700 mb-3">{product.description}</p>
 
             <div className="text-sm text-gray-600 grid grid-cols-2 gap-3 mb-4">
               <div>
