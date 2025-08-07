@@ -46,19 +46,11 @@ const contentVariants = {
 
 export default function ProductDetailModal({ product, onClose }) {
   useEffect(() => {
-    // No overflow lock: do NOT freeze background scroll
-    // Remove or comment out overflow lock lines
-
-    // Close on ESC key press
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleEsc);
-
-    return () => {
-      // No need to reset overflow
-      window.removeEventListener("keydown", handleEsc);
-    };
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
   if (!product) return null;
@@ -78,8 +70,8 @@ export default function ProductDetailModal({ product, onClose }) {
         aria-labelledby="product-title"
       >
         <motion.div
-          className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-3xl w-full max-h-[500px] overflow-hidden relative cursor-default
-            hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(62,95,68,0.3)] transition-transform duration-300 ease-in-out grid grid-cols-2 gap-8"
+          className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative cursor-default
+            hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(62,95,68,0.3)] transition-transform duration-300 ease-in-out grid grid-cols-1 md:grid-cols-2 gap-6"
           onClick={(e) => e.stopPropagation()}
           variants={modalVariants}
           initial="hidden"
@@ -95,33 +87,32 @@ export default function ProductDetailModal({ product, onClose }) {
             <X size={24} />
           </button>
 
-          {/* Left: Image with subtle shadow */}
+          {/* Left: Image centered vertically */}
           <motion.div
-            className="flex-shrink-0 w-full max-h-[440px] rounded-lg shadow-lg bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4"
+            className="flex items-center justify-center w-full h-full rounded-lg shadow-lg bg-gradient-to-br from-green-50 to-green-100 p-4"
             variants={imageVariants}
           >
             <img
               src={product.image}
               alt={product.title}
-              className="max-h-full max-w-full object-contain rounded-lg"
+              className="h-auto max-h-[250px] w-auto object-contain rounded-lg"
               loading="lazy"
             />
           </motion.div>
 
           {/* Right: Content */}
           <motion.div
-            className="flex flex-col overflow-y-auto max-h-[440px] pr-1"
+            className="flex flex-col pr-1"
             variants={contentVariants}
           >
             <h2
               id="product-title"
-              className="text-2xl font-extrabold text-[#3E5F44] mb-4 truncate"
-              title={product.title}
+              className="text-2xl font-extrabold text-[#3E5F44] mb-4 break-words"
             >
               {product.title}
             </h2>
 
-            <p className="text-base text-gray-700 mb-3 flex-grow overflow-auto">
+            <p className="text-base text-gray-700 mb-3">
               {product.description}
             </p>
 

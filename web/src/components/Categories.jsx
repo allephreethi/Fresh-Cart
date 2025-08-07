@@ -4,24 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import {
-  Boxes, ShoppingCart, Apple, Milk, Package, Egg,
-  Flame, Nut, Snowflake, Cookie, CupSoda, Popcorn, Coffee
-} from 'lucide-react';
+  LayoutGrid, ShoppingCart, Apple, Milk, BoxSelect, Egg,
+  CookingPot, Nut, Snowflake, Cookie, GlassWater, Popcorn, Coffee
+} from 'lucide-react'; // ✅ valid icons
 
 const categories = [
-  { name: 'All Products', icon: Boxes, slug: 'all-products' },
-  { name: 'Groceries', icon: ShoppingCart, slug: 'groceries' },
-  { name: 'Fruits', icon: Apple, slug: 'fruits' },
-  { name: 'Dairy', icon: Milk, slug: 'dairy' },
-  { name: 'Packaged Food', icon: Package, slug: 'packaged-food' },
-  { name: 'Eggs', icon: Egg, slug: 'eggs' },
-  { name: 'Masalas', icon: Flame, slug: 'masalas' },
-  { name: 'Dry Fruits', icon: Nut, slug: 'dry-fruits' },
-  { name: 'Frozen Food', icon: Snowflake, slug: 'frozen-food' },
-  { name: 'Biscuits', icon: Cookie, slug: 'biscuits' },
-  { name: 'Cold Drinks', icon: CupSoda, slug: 'cold-drinks' },
-  { name: 'Snacks', icon: Popcorn, slug: 'snacks' },
-  { name: 'Tea/Coffee', icon: Coffee, slug: 'tea-coffee' },
+  { name: 'All Products', icon: LayoutGrid, slug: 'all-products', color: 'text-gray-700' },
+  { name: 'Groceries', icon: ShoppingCart, slug: 'groceries', color: 'text-green-700' },
+  { name: 'Fruits', icon: Apple, slug: 'fruits', color: 'text-red-600' },
+  { name: 'Dairy', icon: Milk, slug: 'dairy', color: 'text-yellow-500' },
+  { name: 'Packaged Food', icon: BoxSelect, slug: 'packaged-food', color: 'text-orange-500' },
+  { name: 'Eggs', icon: Egg, slug: 'eggs', color: 'text-amber-500' },
+  { name: 'Masalas', icon: CookingPot, slug: 'masalas', color: 'text-rose-600' },
+  { name: 'Dry Fruits', icon: Nut, slug: 'dry-fruits', color: 'text-amber-700' },
+  { name: 'Frozen Food', icon: Snowflake, slug: 'frozen-food', color: 'text-blue-500' },
+  { name: 'Biscuits', icon: Cookie, slug: 'biscuits', color: 'text-yellow-600' },
+  { name: 'Cold Drinks', icon: GlassWater, slug: 'cold-drinks', color: 'text-cyan-600' },
+  { name: 'Snacks', icon: Popcorn, slug: 'snacks', color: 'text-orange-400' },
+  { name: 'Tea/Coffee', icon: Coffee, slug: 'tea-coffee', color: 'text-amber-800' },
 ];
 
 export default function CategoriesSection({ onCategorySelect }) {
@@ -35,7 +35,7 @@ export default function CategoriesSection({ onCategorySelect }) {
     const handleResize = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
-        const cardWidth = 80 + 12; // 80px card + 12px margin approximation
+        const cardWidth = 80 + 12;
         const visibleCount = Math.floor(containerWidth / cardWidth);
         setCardsPerPage(visibleCount);
       }
@@ -52,10 +52,7 @@ export default function CategoriesSection({ onCategorySelect }) {
     navigate(`/products/${slug}`);
 
     const selectedIndex = categories.findIndex((c) => c.slug === slug);
-    if (
-      selectedIndex < startIndex ||
-      selectedIndex >= startIndex + cardsPerPage
-    ) {
+    if (selectedIndex < startIndex || selectedIndex >= startIndex + cardsPerPage) {
       setStartIndex(Math.max(0, selectedIndex - Math.floor(cardsPerPage / 2)));
     }
   };
@@ -93,7 +90,7 @@ export default function CategoriesSection({ onCategorySelect }) {
             ref={containerRef}
             className="flex gap-2 justify-center w-full max-w-6xl mx-auto overflow-hidden"
           >
-            {visibleCategories.map(({ name, icon: Icon, slug }, index) => {
+            {visibleCategories.map(({ name, icon: Icon, slug, color }, index) => {
               const isSelected = slug === selectedSlug;
               return (
                 <motion.div
@@ -104,16 +101,18 @@ export default function CategoriesSection({ onCategorySelect }) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleCategoryClick(slug)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(slug)}
                   role="button"
                   tabIndex={0}
+                  aria-label={name}
                   className={`group relative flex flex-col items-center justify-center p-2 rounded-lg text-center text-xs w-20 shrink-0 cursor-pointer transition 
                     ${isSelected
                       ? 'bg-green-100 border border-green-500 scale-105 ring-2 ring-green-400 shadow-md'
                       : 'bg-white hover:bg-green-50 hover:shadow-lg hover:scale-105'
                     }`}
                 >
-                  <div className="bg-green-100 p-1.5 rounded-full mb-1">
-                    <Icon size={18} className="text-green-700" />
+                  <div className="p-1.5 rounded-full mb-1 bg-white shadow-inner">
+                    <Icon size={18} className={color} />
                   </div>
                   <p className="text-gray-800 font-medium">{name}</p>
 

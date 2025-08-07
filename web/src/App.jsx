@@ -26,9 +26,10 @@ export default function App() {
     wishlistOpen,
     cartOpen,
   } = useAppContext();
+
   const { isExpanded } = useSidebar();
 
-  // Right margin for panels
+  // Adjust right margin for panels
   let rightMargin = 'mr-0';
   if (cartOpen) rightMargin = 'mr-96';
   else if (wishlistOpen) rightMargin = 'mr-80';
@@ -38,7 +39,7 @@ export default function App() {
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content (Header + Main) */}
+      {/* Main Content */}
       <div
         className={`flex flex-col min-h-screen transition-all duration-300 ${
           isExpanded ? 'ml-48' : 'ml-16'
@@ -46,7 +47,7 @@ export default function App() {
       >
         <Header />
 
-        <main className="flex-1 p-4 mt-14 pb-32">
+        <main className="flex-1 p-4 mt-14 pb-16">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
@@ -59,7 +60,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* Footer - Placed outside the content wrapper for full width */}
+      {/* Footer */}
       <Footer />
 
       {/* Panels */}
@@ -68,7 +69,7 @@ export default function App() {
       <CartPanel />
       <FloatingCartButton />
 
-      {/* Location Popup */}
+      {/* Location Permission Popup */}
       {locationPopupOpen && <LocationPopup />}
 
       {/* Toast Notification */}
