@@ -1,3 +1,4 @@
+// src/context/AppContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const AppContext = createContext();
@@ -9,8 +10,9 @@ export function AppProvider({ children }) {
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Cart items from localStorage
   const [cartItems, setCartItems] = useState(() => {
-    // Load from localStorage (once)
     try {
       const stored = localStorage.getItem('cartItems');
       return stored ? JSON.parse(stored) : [];
@@ -19,10 +21,15 @@ export function AppProvider({ children }) {
       return [];
     }
   });
+
+  // Toast
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+
+  // Dark mode
   const [darkMode, setDarkMode] = useState(false);
 
+  // Location
   const [locationData, setLocationData] = useState({
     city: '',
     address: '',
@@ -30,10 +37,49 @@ export function AppProvider({ children }) {
     longitude: null,
   });
 
+  // =================== AUTH STATE ===================
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [profilePic, setProfilePic] = useState(() => {
+    try {
+      return localStorage.getItem('profilePic') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  // =================== LOGIN MODAL ===================
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const openLoginModal = () => setLoginModalOpen(true);
+  const closeLoginModal = () => setLoginModalOpen(false);
+
   // =================== LOCALSTORAGE SYNC ===================
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cartItems));
   }, [cartItems]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (profilePic) {
+      localStorage.setItem('profilePic', profilePic);
+    } else {
+      localStorage.removeItem('profilePic');
+    }
+  }, [profilePic]);
 
   // =================== AUTO LOCATION DETECTION ===================
   useEffect(() => {
@@ -105,6 +151,24 @@ export function AppProvider({ children }) {
     setToastType(type);
     setToastMessage(message);
     setTimeout(() => setToastMessage(''), 2000);
+  };
+
+  // =================== AUTH FUNCTIONS ===================
+  const loginUser = (userData) => {
+    setUser(userData);
+    showToast(`Welcome ${userData.name || 'User'}!`, 'success');
+    closeLoginModal();
+  };
+
+  const logoutUser = () => {
+    setUser(null);
+    setProfilePic('');
+    showToast('Logged out successfully', 'success');
+  };
+
+  const updateProfilePic = (newPicUrl) => {
+    setProfilePic(newPicUrl);
+    showToast('Profile picture updated', 'success');
   };
 
   // =================== WISHLIST ===================
@@ -277,6 +341,18 @@ export function AppProvider({ children }) {
         // Dark Mode
         darkMode,
         toggleDarkMode,
+
+        // Auth
+        user,
+        profilePic,
+        loginUser,
+        logoutUser,
+        updateProfilePic,
+
+        // Login Modal
+        loginModalOpen,
+        openLoginModal,
+        closeLoginModal,
       }}
     >
       {children}

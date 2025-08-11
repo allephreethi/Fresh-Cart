@@ -888,21 +888,23 @@ const allProducts = [
 
 
 
-
-const tagList = ['New', 'Hot', 'Organic'];
+const tagList = ["New", "Hot", "Organic"];
 
 export default function Products() {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const searchQueryFromURL = searchParams.get('search')?.toLowerCase() || '';
-  const categoryFromURL = searchParams.get('category') || 'all-products';
+  const searchQueryFromURL =
+    searchParams.get("search")?.toLowerCase() || "";
+  const categoryFromURL = searchParams.get("category") || "all-products";
 
   const [selectedCategory, setSelectedCategory] = useState(categoryFromURL);
   const [priceRange, setPriceRange] = useState(500);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [sortOption, setSortOption] = useState('');
-  const [searchQueryState, setSearchQueryState] = useState(searchQueryFromURL);
+  const [sortOption, setSortOption] = useState("");
+  const [searchQueryState, setSearchQueryState] = useState(
+    searchQueryFromURL
+  );
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const {
@@ -917,20 +919,23 @@ export default function Products() {
     setSelectedCategory(categoryFromURL);
     setPriceRange(500);
     setSelectedTags([]);
-    setSortOption('');
+    setSortOption("");
     setSearchQueryState(searchQueryFromURL);
   }, [location.pathname, location.search]);
 
   const toggleTag = (tag) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
     );
   };
 
   const filteredProducts = allProducts
     .filter((p) => {
       const matchesCategory =
-        selectedCategory === 'all-products' || p.category === selectedCategory;
+        selectedCategory === "all-products" ||
+        p.category === selectedCategory;
       const matchesPrice = p.price <= priceRange;
       const matchesTags =
         selectedTags.length === 0 ||
@@ -939,15 +944,20 @@ export default function Products() {
         !searchQueryState ||
         p.title.toLowerCase().includes(searchQueryState) ||
         p.description.toLowerCase().includes(searchQueryState);
-      return matchesCategory && matchesPrice && matchesTags && matchesSearch;
+      return (
+        matchesCategory &&
+        matchesPrice &&
+        matchesTags &&
+        matchesSearch
+      );
     })
     .sort((a, b) => {
       switch (sortOption) {
-        case 'price-low':
+        case "price-low":
           return a.price - b.price;
-        case 'price-high':
+        case "price-high":
           return b.price - a.price;
-        case 'rating':
+        case "rating":
           return b.rating - a.rating;
         default:
           return 0;
@@ -956,13 +966,18 @@ export default function Products() {
 
   return (
     <div className="p-4">
-      <CategoriesSection onCategorySelect={(slug) => setSelectedCategory(slug)} />
+      <CategoriesSection
+        onCategorySelect={(slug) => setSelectedCategory(slug)}
+      />
 
       {/* Active Filter Chips */}
       {(selectedTags.length > 0 || priceRange < 500 || sortOption) && (
         <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
           {selectedTags.map((tag) => (
-            <span key={tag} className="bg-green-100 text-green-800 px-2 py-1 rounded-full">
+            <span
+              key={tag}
+              className="bg-green-100 text-green-800 px-2 py-1 rounded-full"
+            >
               {tag}
             </span>
           ))}
@@ -973,14 +988,14 @@ export default function Products() {
           )}
           {sortOption && (
             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              {sortOption.replace('-', ' ')}
+              {sortOption.replace("-", " ")}
             </span>
           )}
           <button
             onClick={() => {
               setPriceRange(500);
               setSelectedTags([]);
-              setSortOption('');
+              setSortOption("");
             }}
             className="text-red-500 ml-auto hover:underline"
           >
@@ -989,13 +1004,14 @@ export default function Products() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters - now scrolls with page */}
       <motion.div
-        className="bg-white shadow rounded-lg p-3 mb-6 text-sm grid grid-cols-1 md:grid-cols-3 gap-4 sticky top-14 z-10"
+        className="bg-white shadow rounded-lg p-3 mb-6 text-sm grid grid-cols-1 md:grid-cols-3 gap-4"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
+        {/* Max Price */}
         <div className="flex flex-col gap-1">
           <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
             Max Price
@@ -1013,6 +1029,7 @@ export default function Products() {
           </span>
         </div>
 
+        {/* Tags */}
         <div className="flex flex-col gap-1">
           <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
             Tags
@@ -1026,8 +1043,8 @@ export default function Products() {
                 onClick={() => toggleTag(tag)}
                 className={`px-2 py-1 rounded-full border text-xs transition font-medium ${
                   selectedTags.includes(tag)
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-gray-100 text-gray-800 hover:bg-green-100'
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-gray-100 text-gray-800 hover:bg-green-100"
                 }`}
               >
                 {tag}
@@ -1036,6 +1053,7 @@ export default function Products() {
           </div>
         </div>
 
+        {/* Sort By */}
         <div className="flex flex-col gap-1">
           <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
             Sort By
@@ -1057,7 +1075,9 @@ export default function Products() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredProducts.map((product) => {
           const isWished = isInWishlist(product.id);
-          const cartItem = cartItems.find((item) => item.id === product.id);
+          const cartItem = cartItems.find(
+            (item) => item.id === product.id
+          );
           const quantity = cartItem ? cartItem.quantity : 0;
 
           return (
@@ -1076,7 +1096,9 @@ export default function Products() {
                   toggleWishlistItem(product);
                 }}
                 className={`absolute top-2 left-2 z-10 ${
-                  isWished ? 'text-red-500' : 'text-gray-300'
+                  isWished
+                    ? "text-red-500"
+                    : "text-gray-300"
                 } hover:text-red-600 transition-colors`}
               >
                 <FaHeart size={14} />
@@ -1088,17 +1110,26 @@ export default function Products() {
                 className="w-full h-36 object-contain mb-2 rounded"
               />
 
-              <h3 className="font-semibold text-xs text-[#3E5F44]">{product.title}</h3>
-              <p className="text-xs text-gray-700 mt-1 line-clamp-2">{product.description}</p>
+              <h3 className="font-semibold text-xs text-[#3E5F44]">
+                {product.title}
+              </h3>
+              <p className="text-xs text-gray-700 mt-1 line-clamp-2">
+                {product.description}
+              </p>
 
               <div className="flex items-center justify-between text-xs mt-1">
-                <span className="text-gray-800">{product.rating.toFixed(1)} rating</span>
-                <span className="text-[#5E936C] font-medium">{product.quantity}</span>
+                <span className="text-gray-800">
+                  {product.rating.toFixed(1)} rating
+                </span>
+                <span className="text-[#5E936C] font-medium">
+                  {product.quantity}
+                </span>
               </div>
 
               <div className="flex justify-between items-center mt-2">
                 <div className="flex flex-col">
-                  {product.originalPrice && product.originalPrice > product.price ? (
+                  {product.originalPrice &&
+                  product.originalPrice > product.price ? (
                     <div className="flex items-center gap-1">
                       <span className="text-gray-400 line-through text-xs">
                         ₹{product.originalPrice}
@@ -1120,14 +1151,18 @@ export default function Products() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
-                      onClick={() => updateQuantity(product.id, -1)}
+                      onClick={() =>
+                        updateQuantity(product.id, -1)
+                      }
                       className="bg-[#5E936C] text-white p-1 text-xs rounded hover:bg-[#3E5F44]"
                     >
                       <FaMinus size={10} />
                     </button>
                     <span className="px-1 text-sm">{quantity}</span>
                     <button
-                      onClick={() => updateQuantity(product.id, 1)}
+                      onClick={() =>
+                        updateQuantity(product.id, 1)
+                      }
                       className="bg-[#5E936C] text-white p-1 text-xs rounded hover:bg-[#3E5F44]"
                     >
                       <FaPlus size={10} />

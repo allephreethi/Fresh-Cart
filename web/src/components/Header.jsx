@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { useSidebar } from '../context/SidebarContext';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/AppContext';  // import AppContext
+import { useUser } from '../context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -17,18 +18,23 @@ export default function Header() {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSearchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cityName, setCityName] = useState('Hyderabad'); // Default fallback city
   const searchInputRef = useRef(null);
   const { toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Get toggle functions from your AppContext
   const {
     toggleWishlist,
     toggleNotifications,
     openLocationPopup,
-    locationData,
   } = useAppContext();
 
+  // Get user and logout from UserContext
+  const { user, logoutUser } = useUser();
+
+  // Search debounce effect
   useEffect(() => {
     if (!isSearchFocused) return;
 
@@ -44,13 +50,42 @@ export default function Header() {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, isSearchFocused, location.pathname, navigate]);
 
-  const getCityName = () => {
-    if (locationData?.address) {
-      const parts = locationData.address.split(',');
-      return parts.length >= 2 ? parts[parts.length - 4]?.trim() : 'Location';
-    }
-    return 'Hyderabad';
-  };
+  // Geolocation + Reverse Geocoding to get city name dynamically
+  useEffect(() => {
+    if (!navigator.geolocation) return; // Geolocation not supported
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          if (!res.ok) throw new Error('Failed to fetch location data');
+          const data = await res.json();
+
+          // Extract city or fallback to other location names
+          const city =
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            data.address.county ||
+            'Hyderabad';
+
+          setCityName(city);
+        } catch (error) {
+          console.error('Error fetching city name:', error);
+          // fallback stays as 'Hyderabad'
+        }
+      },
+      (error) => {
+        console.warn('Geolocation error:', error);
+        // fallback stays as 'Hyderabad'
+      },
+      { timeout: 10000 }
+    );
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md shadow z-50 border-b px-4 flex items-center justify-between">
@@ -63,28 +98,30 @@ export default function Header() {
           className="h-8 sm:h-9 w-auto"
         />
 
-        {/* Sidebar Toggle with Animation */}
+        {/* Sidebar Toggle */}
         <motion.button
           whileHover={{ rotate: 90 }}
           whileTap={{ scale: 0.9 }}
           onClick={toggleSidebar}
           className="text-gray-700 hover:text-green-600"
+          aria-label="Toggle Sidebar"
         >
           <Menu size={22} />
         </motion.button>
 
-        {/* Premium Button - hidden on small screens */}
+        {/* Premium Button */}
         <button className="hidden sm:inline-block ml-1 px-3 py-1 text-xs font-semibold rounded-full text-white bg-gradient-to-r from-green-700 via-green-500 to-lime-400 hover:from-green-600 hover:to-lime-300 transition-all">
           Premium++
         </button>
       </div>
 
-      {/* Center: Search - only visible on sm+ screens */}
+      {/* Center: Search */}
       <div className="relative flex-grow max-w-md mx-2 hidden sm:block">
         <Search
           className="absolute left-3 top-2.5 text-gray-400 cursor-pointer hover:text-green-600"
           size={18}
           onClick={() => searchInputRef.current?.focus()}
+          aria-label="Search icon"
         />
         {searchQuery && (
           <X
@@ -96,6 +133,7 @@ export default function Header() {
             }}
             className="absolute right-3 top-2.5 text-gray-400 cursor-pointer hover:text-red-500"
             size={18}
+            aria-label="Clear search"
           />
         )}
         <input
@@ -109,6 +147,7 @@ export default function Header() {
           className={`pl-10 pr-8 py-2 w-full rounded-full border ${
             isSearchFocused ? 'border-green-500' : 'border-gray-300'
           } text-sm bg-white/70 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all`}
+          aria-label="Search input"
         />
       </div>
 
@@ -118,39 +157,79 @@ export default function Header() {
           size={20}
           onClick={() => toggleWishlist(true)}
           className="text-gray-600 hover:text-green-600 cursor-pointer"
+          role="button"
+          aria-label="Wishlist"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && toggleWishlist(true)}
         />
         <Bell
           size={20}
-          onClick={toggleNotifications}
+          onClick={() => toggleNotifications(true)}
           className="text-gray-600 hover:text-green-600 cursor-pointer"
+          role="button"
+          aria-label="Notifications"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && toggleNotifications(true)}
         />
-        {/* Location - hidden on small screens */}
+
+        {/* Location */}
         <div
           onClick={openLocationPopup}
           className="hidden sm:flex items-center gap-1 text-gray-600 hover:text-green-600 cursor-pointer text-sm"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && openLocationPopup()}
+          aria-label="User location"
         >
           <MapPin size={18} />
-          <span className="hidden md:inline">{getCityName()}</span>
+          <span className="hidden md:inline">{cityName}</span>
         </div>
 
-        {/* Profile Dropdown */}
+        {/* Profile */}
         <div
           className="relative flex items-center gap-2 cursor-pointer"
-          onMouseEnter={() => setDropdownOpen(true)}
-          onMouseLeave={() => setDropdownOpen(false)}
+          onMouseEnter={() => user && setDropdownOpen(true)}
+          onMouseLeave={() => user && setDropdownOpen(false)}
+          onClick={() => {
+            if (!user) {
+              const hasSignedUp = localStorage.getItem('hasSignedUp') === 'true';
+              if (hasSignedUp) {
+                navigate('/login');
+              } else {
+                navigate('/signup');
+              }
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              if (!user) {
+                const hasSignedUp = localStorage.getItem('hasSignedUp') === 'true';
+                if (hasSignedUp) navigate('/login');
+                else navigate('/signup');
+              }
+            }
+          }}
+          aria-label={user ? `User menu for ${user.name}` : 'Login or Signup'}
         >
           <img
-            src={`${process.env.PUBLIC_URL}/img/profile.png`}
+            src={
+              user?.profilePic
+                ? user.profilePic
+                : `${process.env.PUBLIC_URL}/img/profile.png`
+            }
             alt="Profile"
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-gray-300 object-cover"
           />
           <span className="hidden sm:block text-sm font-medium text-gray-700">
-            Preethi
+            {user ? user.name : 'Login'}
           </span>
-          <ChevronDown className="text-gray-500" size={16} />
+          {user && <ChevronDown className="text-gray-500" size={16} />}
 
+          {/* Dropdown */}
           <AnimatePresence>
-            {isDropdownOpen && (
+            {user && isDropdownOpen && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -196,7 +275,14 @@ export default function Header() {
                     </Link>
                   </li>
                   <li>
-                    <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100">
+                    <button
+                      onClick={() => {
+                        logoutUser();
+                        setDropdownOpen(false);
+                        navigate('/login');
+                      }}
+                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                    >
                       Logout
                     </button>
                   </li>

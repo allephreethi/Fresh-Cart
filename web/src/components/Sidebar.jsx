@@ -6,10 +6,11 @@ import {
   HelpCircle,
   LogOut,
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../context/SidebarContext';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useUser } from '../context/UserContext';
 
 const menuItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -22,6 +23,9 @@ const menuItems = [
 export default function Sidebar() {
   const { isExpanded, setHover } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const { user, logoutUser } = useUser();
 
   const [sidebarHeight, setSidebarHeight] = useState(window.innerHeight - 64);
 
@@ -55,6 +59,15 @@ export default function Sidebar() {
     };
   }, []);
 
+  function handleLogout() {
+    logoutUser();
+    navigate('/login');
+  }
+
+  function handleLogin() {
+    navigate('/login');
+  }
+
   return (
     <motion.div
       onMouseEnter={() => setHover(true)}
@@ -73,20 +86,30 @@ export default function Sidebar() {
         flexDirection: 'column',
         justifyContent: 'space-between',
         transition: 'width 0.3s ease, height 0.3s ease',
-        overflowY: 'hidden',      // Only vertical scroll allowed inside nav
-        overflowX: 'hidden',      // Prevent horizontal scrollbar
+        overflowY: 'hidden',
+        overflowX: 'hidden',
         boxSizing: 'border-box',
       }}
     >
-      {/* Profile */}
-      <div className="flex items-center justify-center h-16 border-b border-gray-200">
-        <motion.img
-          whileHover={{ scale: 1.1 }}
-          src={`${process.env.PUBLIC_URL}/img/profile.png`}
-          alt="Profile"
-          className="w-9 h-9 rounded-full object-cover"
-          style={{ flexShrink: 0 }}
-        />
+      {/* Profile or Login Button */}
+      <div className="flex items-center justify-center h-16 border-b border-gray-200 px-2">
+        {user ? (
+          <motion.img
+            whileHover={{ scale: 1.1 }}
+            src={user.profilePic || `${process.env.PUBLIC_URL}/img/profile.png`}
+            alt="Profile"
+            className="w-9 h-9 rounded-full object-cover"
+            style={{ flexShrink: 0 }}
+          />
+        ) : (
+          <button
+            onClick={handleLogin}
+            className="w-full text-green-600 font-semibold hover:underline"
+            aria-label="Login"
+          >
+            {isExpanded ? 'Login' : '🔑'}
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -106,19 +129,26 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Logout */}
+      {/* Logout or Empty space */}
       <div className="mb-4 px-2" style={{ minWidth: 0 }}>
-        <button
-          className="group flex items-center gap-3 px-3 py-2 w-full text-red-600 hover:bg-red-100 rounded-md transition-all whitespace-nowrap"
-          style={{ minWidth: 0, overflow: 'hidden' }}
-        >
-          <LogOut size={20} />
-          {isExpanded && (
-            <span className="text-sm truncate" style={{ minWidth: 0 }}>
-              Logout
-            </span>
-          )}
-        </button>
+        {user ? (
+          <button
+            onClick={handleLogout}
+            className="group flex items-center gap-3 px-3 py-2 w-full text-red-600 hover:bg-red-100 rounded-md transition-all whitespace-nowrap"
+            style={{ minWidth: 0, overflow: 'hidden' }}
+            aria-label="Logout"
+          >
+            <LogOut size={20} />
+            {isExpanded && (
+              <span className="text-sm truncate" style={{ minWidth: 0 }}>
+                Logout
+              </span>
+            )}
+          </button>
+        ) : (
+          // Optionally you can show nothing or a placeholder here when not logged in
+          <div style={{ height: 40 }} />
+        )}
       </div>
     </motion.div>
   );
