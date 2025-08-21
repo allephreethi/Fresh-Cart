@@ -14,10 +14,9 @@ export default function Checkout({ isOpen, onClose, appliedCoupon = null }) {
   const {
     user,
     cartItems,
-    setCartItems,      // ✅ To empty cart locally
+    setCartItems,
     showToast,
     toggleCart,
-    clearCart,         // Optional: backend sync
   } = useAppContext();
 
   const [addresses, setAddresses] = useState([]);
@@ -50,7 +49,7 @@ export default function Checkout({ isOpen, onClose, appliedCoupon = null }) {
     fetchAddresses();
   }, [user]);
 
-  // Totals
+  // Calculate totals
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0),
     [cartItems]
@@ -62,7 +61,7 @@ export default function Checkout({ isOpen, onClose, appliedCoupon = null }) {
 
   const paymentIcons = { COD: <Wallet size={18} />, Card: <CreditCard size={18} />, UPI: <Check size={18} /> };
 
-  // Confirm order
+  // Handle order confirmation
   const handleConfirmOrder = async () => {
     if (!user?.id) return showToast("User not logged in", "error");
     if (!selectedAddress) return showToast("Please select an address", "error");
@@ -89,15 +88,11 @@ export default function Checkout({ isOpen, onClose, appliedCoupon = null }) {
       if (res?.data?.order) {
         showToast("Order placed successfully!", "success");
 
-        // ✅ Clear frontend cart immediately
+        // Clear frontend cart
         setCartItems([]);
 
-        // ✅ Optional: sync backend cart clearing
-        try {
-          await clearCart();
-        } catch (err) {
-          console.error("Failed to clear backend cart:", err);
-        }
+        // Close cart drawer
+        toggleCart(false);
 
         // Confetti
         confetti({
@@ -110,7 +105,10 @@ export default function Checkout({ isOpen, onClose, appliedCoupon = null }) {
           ticks: 300,
         });
 
+        // Close checkout panel
         onClose();
+
+        // Navigate to orders page
         navigate("/orders");
       } else {
         showToast("Order failed, please try again", "error");

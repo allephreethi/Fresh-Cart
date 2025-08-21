@@ -13,7 +13,7 @@ export function AppProvider({ children }) {
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false); // ✅ checkout drawer
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [toastMessage, setToastMessage] = useState("");
@@ -36,10 +36,9 @@ export function AppProvider({ children }) {
     }
   });
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-
-  // =================== LOCATION ===================
   const [location, setLocation] = useState({ city: "", lat: null, lng: null });
 
+  // =================== LOCATION ===================
   const fetchLocation = () => {
     if (!navigator.geolocation) {
       showToast("Geolocation not supported", "error");
@@ -47,16 +46,15 @@ export function AppProvider({ children }) {
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+      async ({ coords }) => {
+        const { latitude, longitude } = coords;
         setLocation((prev) => ({ ...prev, lat: latitude, lng: longitude }));
 
         try {
-          // 1️⃣ Try Nominatim (OpenStreetMap)
+          // 1️⃣ Nominatim
           const res = await axios.get(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
           );
-
           let city =
             res.data.address.city ||
             res.data.address.town ||
@@ -66,60 +64,49 @@ export function AppProvider({ children }) {
             res.data.address.state ||
             "";
 
-          if (city) {
-            setLocation({ lat: latitude, lng: longitude, city });
-            return;
-          }
-
-          // 2️⃣ Fallback Google Maps
-          if (GOOGLE_KEY) {
+          if (!city && GOOGLE_KEY) {
+            // 2️⃣ Google Maps fallback
             try {
               const gRes = await axios.get(
                 `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
               );
-              if (gRes.data.results?.length) {
-                const components = gRes.data.results[0].address_components;
-                const cityComponent = components.find((c) =>
-                  c.types.includes("locality")
-                );
-                const districtComponent = components.find((c) =>
-                  c.types.includes("administrative_area_level_2")
-                );
-                const stateComponent = components.find((c) =>
-                  c.types.includes("administrative_area_level_1")
-                );
-
-                city =
-                  cityComponent?.long_name ||
-                  districtComponent?.long_name ||
-                  stateComponent?.long_name ||
-                  "";
-
-                if (city) {
-                  setLocation({ lat: latitude, lng: longitude, city });
-                  return;
-                }
-              }
+              const components = gRes.data.results[0]?.address_components || [];
+              const cityComponent = components.find((c) =>
+                c.types.includes("locality")
+              );
+              const districtComponent = components.find((c) =>
+                c.types.includes("administrative_area_level_2")
+              );
+              const stateComponent = components.find((c) =>
+                c.types.includes("administrative_area_level_1")
+              );
+              city =
+                cityComponent?.long_name ||
+                districtComponent?.long_name ||
+                stateComponent?.long_name ||
+                "";
             } catch (gErr) {
               console.error("❌ Google Maps failed:", gErr.message);
             }
           }
 
-          // 3️⃣ Last fallback: BigDataCloud
-          try {
-            const res2 = await axios.get(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            city =
-              res2.data.city ||
-              res2.data.locality ||
-              res2.data.principalSubdivision ||
-              "Unknown";
-            setLocation({ lat: latitude, lng: longitude, city });
-          } catch (err2) {
-            console.error("❌ BigDataCloud failed:", err2.message);
-            showToast("Failed to fetch city", "error");
+          if (!city) {
+            // 3️⃣ BigDataCloud fallback
+            try {
+              const res2 = await axios.get(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              );
+              city =
+                res2.data.city ||
+                res2.data.locality ||
+                res2.data.principalSubdivision ||
+                "Unknown";
+            } catch (err2) {
+              console.error("❌ BigDataCloud failed:", err2.message);
+            }
           }
+
+          setLocation({ lat: latitude, lng: longitude, city });
         } catch (err) {
           console.error("❌ Location fetch failed:", err.message);
           showToast("Failed to fetch location", "error");
@@ -226,10 +213,7 @@ export function AppProvider({ children }) {
           )
         );
       } else {
-        setCartItems([
-          ...cartItems,
-          { id: Date.now(), productId: item.id, ...item, quantity },
-        ]);
+        setCartItems([...cartItems, { id: Date.now(), productId: item.id, ...item, quantity }]);
       }
 
       showToast(`${item.title} added to cart`);
@@ -288,7 +272,7 @@ export function AppProvider({ children }) {
     if (!user) return;
     try {
       await axios.post(`${API_URL}/cart/checkout`, { userId: user.id });
-      setCartItems([]);
+      setCartItems([]); // ✅ now works because setCartItems is exposed
       showToast("Cart cleared", "success");
       addNotification("Cart cleared", "success");
     } catch (err) {
@@ -388,8 +372,7 @@ export function AppProvider({ children }) {
     }
   };
 
-  const isInWishlist = (id) =>
-    wishlistItems.some((i) => i.productId === id);
+  const isInWishlist = (id) => wishlistItems.some((i) => i.productId === id);
 
   const removeFromWishlist = async (productId) => {
     if (!user) return;
@@ -429,7 +412,7 @@ export function AppProvider({ children }) {
 
   // =================== MODALS & UI ===================
   const toggleCart = () => setCartOpen((prev) => !prev);
-  const toggleCheckout = (value) => setCheckoutOpen(value ?? !checkoutOpen); // ✅ use this
+  const toggleCheckout = (value) => setCheckoutOpen(value ?? !checkoutOpen);
   const toggleWishlist = (state) =>
     setWishlistOpen(typeof state === "boolean" ? state : (prev) => !prev);
   const openLocationPopup = () => {
@@ -454,10 +437,11 @@ export function AppProvider({ children }) {
       value={{
         // Cart
         cartItems,
+        setCartItems, // ✅ expose for Checkout.jsx
         cartOpen,
         toggleCart,
         checkoutOpen,
-        toggleCheckout, // ✅ expose this
+        toggleCheckout,
         addToCart,
         updateQuantity,
         removeFromCart,
