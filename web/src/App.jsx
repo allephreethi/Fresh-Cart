@@ -1,7 +1,9 @@
+// src/App.jsx
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-import { useAppContext } from './context/AppContext'; // Your existing app context
+import { useAppContext } from './context/AppContext';
 import { useSidebar } from './context/SidebarContext';
 import { UserProvider, useUser } from './context/UserContext';
 
@@ -13,6 +15,7 @@ import LocationPopup from './components/LocationPopup';
 import Footer from './components/Footer';
 import FloatingCartButton from './components/FloatingCartButton';
 import CartPanel from './components/CartPanel';
+import Checkout from './pages/Checkout';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -22,7 +25,7 @@ import AccountSettings from './pages/AccountSettings';
 
 import AuthTabs from './components/AuthTabs'; // combined login/signup component
 
-// Protect routes - if user not logged in, redirect to login
+// Private route wrapper
 function PrivateRoute({ children }) {
   const { user } = useUser();
   if (!user) {
@@ -32,20 +35,16 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  const {
-    locationPopupOpen,
-    toastMessage,
-    toastType,
-    wishlistOpen,
-    cartOpen,
-  } = useAppContext();
-
+  const { locationPopupOpen, toastMessage, toastType, wishlistOpen, cartOpen, checkoutOpen } =
+    useAppContext();
   const { isExpanded } = useSidebar();
 
-  // Adjust right margin for panels
-  let rightMargin = 'mr-0';
-  if (cartOpen) rightMargin = 'mr-96';
-  else if (wishlistOpen) rightMargin = 'mr-80';
+  // Calculate dynamic right margin based on open panels
+  const panelWidth = 384; // 96 * 4 = 24rem for cart/checkout
+  let rightOffset = 0;
+  if (checkoutOpen) rightOffset = panelWidth;
+  else if (cartOpen) rightOffset = panelWidth;
+  else if (wishlistOpen) rightOffset = 320; // 80 * 4 = 20rem
 
   return (
     <UserProvider>
@@ -54,16 +53,18 @@ export default function App() {
         <Sidebar />
 
         {/* Main Content */}
-        <div
+        <motion.div
+          animate={{ marginRight: rightOffset }}
+          transition={{ type: 'tween', duration: 0.3 }}
           className={`flex flex-col min-h-screen transition-all duration-300 ${
             isExpanded ? 'ml-48' : 'ml-16'
-          } ${rightMargin}`}
+          }`}
         >
           <Header />
 
           <main className="flex-1 p-4 mt-14 pb-16">
             <Routes>
-              {/* Protected routes */}
+              {/* Protected Routes */}
               <Route
                 path="/"
                 element={
@@ -112,11 +113,17 @@ export default function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/checkout"
+                element={
+                  <PrivateRoute>
+                    <Checkout />
+                  </PrivateRoute>
+                }
+              />
 
-              {/* Combined auth route */}
+              {/* Auth Routes */}
               <Route path="/auth" element={<AuthTabs />} />
-
-              {/* Redirect legacy login/signup routes to /auth */}
               <Route path="/login" element={<Navigate to="/auth" replace />} />
               <Route path="/signup" element={<Navigate to="/auth" replace />} />
 
@@ -124,7 +131,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <Footer />
@@ -133,6 +140,7 @@ export default function App() {
         <WishlistPanel />
         <NotificationPanel />
         <CartPanel />
+        <Checkout />
         <FloatingCartButton />
 
         {/* Location Permission Popup */}

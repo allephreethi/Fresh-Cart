@@ -1,107 +1,74 @@
-// backend/server.js
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-const { sql, config } = require('./config'); // <-- adjust path if needed
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const path = require("path");
+const { sql, config } = require("./config"); // SQL Server config
+
+// ===== Import Routes =====
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/userRoutes");
+const addressRoutes = require("./routes/addresses");
+const cartRoutes = require("./routes/cart");
+const wishlistRoutes = require("./routes/wishlist");
+const helpRequestRoutes = require("./routes/helpRequest");
+const ordersRoutes = require("./routes/orders"); // Orders route for checkout
 
 const app = express();
 
 // ===== Middleware =====
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// ===== SIGNUP =====
-app.post('/api/auth/signup', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-    console.log('📩 Signup data:', req.body);
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    await sql.connect(config);
-
-    // Check if email exists
-    let request = new sql.Request();
-    const existingUser = await request
-      .input('email', sql.VarChar, email)
-      .query('SELECT * FROM Users WHERE Email = @email');
-
-    if (existingUser.recordset.length > 0) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert user
-    request = new sql.Request();
-    await request
-      .input('name', sql.VarChar, name)
-      .input('email', sql.VarChar, email)
-      .input('password', sql.VarChar, hashedPassword)
-      .query(
-        'INSERT INTO Users (Name, Email, Password) VALUES (@name, @email, @password)'
-      );
-
-    console.log(`✅ User ${email} registered successfully`);
-    res.json({ message: 'User registered successfully' });
-  } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+// ===== Debug Middleware (Logs Every Request) =====
+app.use((req, res, next) => {
+  console.log(`➡️ Incoming Request: ${req.method} ${req.originalUrl}`);
+  next();
 });
 
-// ===== LOGIN =====
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    console.log('🔑 Login request:', req.body);
+// ===== Static folder for profile pictures =====
+app.use("/uploads/profile", express.static(path.join(__dirname, "uploads/profile")));
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing email or password' });
-    }
+// ===== Routes =====
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+console.log("✅ Wishlist routes mounted at /api/wishlist");
 
-    await sql.connect(config);
+app.use("/api/help-request", helpRequestRoutes);
+console.log("✅ Help Request routes mounted at /api/help-request");
 
-    let request = new sql.Request();
-    const userResult = await request
-      .input('email', sql.VarChar, email)
-      .query('SELECT * FROM Users WHERE Email = @email');
+app.use("/api/orders", ordersRoutes);
+console.log("✅ Orders routes mounted at /api/orders");
 
-    if (userResult.recordset.length === 0) {
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    const user = userResult.recordset[0];
-    const hashedPassword = user.Password || user.password; // handle case sensitivity
-
-    if (!hashedPassword) {
-      console.error('❌ No password found in DB for this user');
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
-
-    const match = await bcrypt.compare(password, hashedPassword);
-
-    if (!match) {
-      return res.status(400).json({ error: 'Invalid email or password' });
-    }
-
-    console.log(`✅ User ${email} logged in successfully`);
-    res.json({
-      message: 'Login successful',
-      user: { id: user.Id, name: user.Name, email: user.Email }
-    });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+// ===== Root endpoint =====
+app.get("/", (req, res) => {
+  res.send("🚀 API is running...");
 });
 
-// ===== START SERVER =====
+// ===== Test SQL Server Connection =====
+sql.connect(config)
+  .then(pool => {
+    if (pool.connected) console.log("✅ Connected to SQL Server");
+  })
+  .catch(err => console.error("❌ Database connection failed:", err));
+
+// ===== 404 Handler =====
+app.use((req, res) => {
+  console.warn(`❌ 404 Not Found: ${req.originalUrl}`);
+  res.status(404).json({ error: "Route not found" });
+});
+
+// ===== Global Error Handler =====
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error:", err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// ===== Start Server =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });

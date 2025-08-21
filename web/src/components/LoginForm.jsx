@@ -1,82 +1,107 @@
+// src/components/Login.jsx
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/UserContext"; // adjust path if needed
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useUser } from "../context/UserContext";
 
-export default function LoginForm() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const { loginUser } = useUser(); // get loginUser from context to set user globally
+  const navigate = useNavigate();
+  const { loginUser } = useUser();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // reset error
+
+    if (!email || !password) {
+      toast.error("Email and password are required");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
+      // Use context loginUser
+      await loginUser({ email, password });
 
-      console.log("✅ Login response data:", res.data);
-      console.log("User object in response:", res.data.user);
-
-      if (
-        res.data &&
-        res.data.message === "Login successful" &&
-        res.data.user
-      ) {
-        // Save user data to context (global state)
-        loginUser(res.data.user);
-
-        // Optionally save to localStorage/sessionStorage
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-
-        // Redirect to homepage (adjust route as needed)
-        navigate("/");
-      } else {
-        setError("Login failed. Please try again.");
-      }
+      toast.success("Login successful!");
+      navigate("/"); // Redirect to home
     } catch (err) {
-      console.error("Login request failed:", err);
-      setError("Invalid email or password.");
+      console.error("Login failed:", err);
+      toast.error(err.message || "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 320, margin: "auto" }}>
-      <h2>Login</h2>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        autoFocus
-        style={{ display: "block", width: "100%", marginBottom: 12, padding: 8 }}
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        style={{ display: "block", width: "100%", marginBottom: 12, padding: 8 }}
-      />
-
-      <button
-        type="submit"
-        style={{ padding: "10px 20px", cursor: "pointer" }}
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          maxWidth: 360,
+          margin: "50px auto",
+          padding: 20,
+          border: "1px solid #ccc",
+          borderRadius: 8,
+        }}
       >
-        Login
-      </button>
-    </form>
+        <h2 style={{ textAlign: "center", marginBottom: 20 }}>Login</h2>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoFocus
+          style={{
+            display: "block",
+            width: "100%",
+            marginBottom: 15,
+            padding: 10,
+            borderRadius: 4,
+            border: "1px solid #ccc",
+          }}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            display: "block",
+            width: "100%",
+            marginBottom: 20,
+            padding: 10,
+            borderRadius: 4,
+            border: "1px solid #ccc",
+          }}
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: 12,
+            backgroundColor: "#5E936C",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1,
+          }}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
+    </>
   );
 }

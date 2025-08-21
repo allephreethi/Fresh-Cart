@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaHeart, FaPlus, FaMinus } from 'react-icons/fa';
-import { useAppContext } from '../context/AppContext';
-import CategoriesSection from '../components/Categories';
-import ProductDetailModal from '../components/ProductDetailModal'; // ✅ import
-
+// src/pages/Products.jsx
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaHeart, FaPlus, FaMinus } from "react-icons/fa";
+import { useAppContext } from "../context/AppContext";
+import CategoriesSection from "../components/Categories";
+import ProductDetailModal from "../components/ProductDetailModal";
 
 const allProducts = [
   {
@@ -886,25 +886,19 @@ const allProducts = [
   }
 ];
 
-
-
 const tagList = ["New", "Hot", "Organic"];
 
 export default function Products() {
   const location = useLocation();
-
   const searchParams = new URLSearchParams(location.search);
-  const searchQueryFromURL =
-    searchParams.get("search")?.toLowerCase() || "";
+  const searchQueryFromURL = searchParams.get("search")?.toLowerCase() || "";
   const categoryFromURL = searchParams.get("category") || "all-products";
 
   const [selectedCategory, setSelectedCategory] = useState(categoryFromURL);
   const [priceRange, setPriceRange] = useState(500);
   const [selectedTags, setSelectedTags] = useState([]);
   const [sortOption, setSortOption] = useState("");
-  const [searchQueryState, setSearchQueryState] = useState(
-    searchQueryFromURL
-  );
+  const [searchQueryState, setSearchQueryState] = useState(searchQueryFromURL);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const {
@@ -915,6 +909,7 @@ export default function Products() {
     cartItems,
   } = useAppContext();
 
+  // Reset filters/search on URL change
   useEffect(() => {
     setSelectedCategory(categoryFromURL);
     setPriceRange(500);
@@ -925,31 +920,23 @@ export default function Products() {
 
   const toggleTag = (tag) => {
     setSelectedTags((prev) =>
-      prev.includes(tag)
-        ? prev.filter((t) => t !== tag)
-        : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
+  // Filter + sort products
   const filteredProducts = allProducts
     .filter((p) => {
       const matchesCategory =
-        selectedCategory === "all-products" ||
-        p.category === selectedCategory;
+        selectedCategory === "all-products" || p.category === selectedCategory;
       const matchesPrice = p.price <= priceRange;
       const matchesTags =
-        selectedTags.length === 0 ||
-        selectedTags.every((tag) => p.tags.includes(tag));
+        selectedTags.length === 0 || selectedTags.every((tag) => p.tags.includes(tag));
       const matchesSearch =
         !searchQueryState ||
         p.title.toLowerCase().includes(searchQueryState) ||
         p.description.toLowerCase().includes(searchQueryState);
-      return (
-        matchesCategory &&
-        matchesPrice &&
-        matchesTags &&
-        matchesSearch
-      );
+      return matchesCategory && matchesPrice && matchesTags && matchesSearch;
     })
     .sort((a, b) => {
       switch (sortOption) {
@@ -965,46 +952,11 @@ export default function Products() {
     });
 
   return (
-    <div className="p-4">
-      <CategoriesSection
-        onCategorySelect={(slug) => setSelectedCategory(slug)}
-      />
+    <div className="p-4 md:p-6">
+      {/* Categories */}
+      <CategoriesSection onCategorySelect={(slug) => setSelectedCategory(slug)} />
 
-      {/* Active Filter Chips */}
-      {(selectedTags.length > 0 || priceRange < 500 || sortOption) && (
-        <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
-          {selectedTags.map((tag) => (
-            <span
-              key={tag}
-              className="bg-green-100 text-green-800 px-2 py-1 rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
-          {priceRange < 500 && (
-            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-              Under ₹{priceRange}
-            </span>
-          )}
-          {sortOption && (
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              {sortOption.replace("-", " ")}
-            </span>
-          )}
-          <button
-            onClick={() => {
-              setPriceRange(500);
-              setSelectedTags([]);
-              setSortOption("");
-            }}
-            className="text-red-500 ml-auto hover:underline"
-          >
-            Reset Filters
-          </button>
-        </div>
-      )}
-
-      {/* Filters - now scrolls with page */}
+      {/* Filters */}
       <motion.div
         className="bg-white shadow rounded-lg p-3 mb-6 text-sm grid grid-cols-1 md:grid-cols-3 gap-4"
         initial={{ opacity: 0, y: 30 }}
@@ -1024,9 +976,7 @@ export default function Products() {
             onChange={(e) => setPriceRange(Number(e.target.value))}
             className="accent-green-600 h-1"
           />
-          <span className="text-green-700 font-semibold text-xs">
-            ₹{priceRange}
-          </span>
+          <span className="text-green-700 font-semibold text-xs">₹{priceRange}</span>
         </div>
 
         {/* Tags */}
@@ -1053,7 +1003,7 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Sort By */}
+        {/* Sort */}
         <div className="flex flex-col gap-1">
           <label className="text-[#5E936C] font-semibold text-sm uppercase tracking-wide">
             Sort By
@@ -1075,9 +1025,8 @@ export default function Products() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredProducts.map((product) => {
           const isWished = isInWishlist(product.id);
-          const cartItem = cartItems.find(
-            (item) => item.id === product.id
-          );
+          const cartItem =
+            cartItems.find((item) => item.productId === product.id) || null;
           const quantity = cartItem ? cartItem.quantity : 0;
 
           return (
@@ -1090,46 +1039,40 @@ export default function Products() {
               className="relative rounded-xl shadow hover:shadow-md transition-all p-3 flex flex-col justify-between overflow-hidden bg-white cursor-pointer"
               onClick={() => setSelectedProduct(product)}
             >
+              {/* Wishlist */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleWishlistItem(product);
                 }}
                 className={`absolute top-2 left-2 z-10 ${
-                  isWished
-                    ? "text-red-500"
-                    : "text-gray-300"
+                  isWished ? "text-red-500" : "text-gray-300"
                 } hover:text-red-600 transition-colors`}
               >
                 <FaHeart size={14} />
               </button>
 
+              {/* Image & Info */}
               <img
                 src={product.image}
                 alt={product.title}
                 className="w-full h-36 object-contain mb-2 rounded"
               />
-
-              <h3 className="font-semibold text-xs text-[#3E5F44]">
-                {product.title}
-              </h3>
-              <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                {product.description}
-              </p>
+              <h3 className="font-semibold text-xs text-[#3E5F44]">{product.title}</h3>
+              <p className="text-xs text-gray-700 mt-1 line-clamp-2">{product.description}</p>
 
               <div className="flex items-center justify-between text-xs mt-1">
-                <span className="text-gray-800">
-                  {product.rating.toFixed(1)} rating
-                </span>
-                <span className="text-[#5E936C] font-medium">
-                  {product.quantity}
-                </span>
+                <span className="text-gray-800">{product.rating.toFixed(1)} rating</span>
+                <span className="text-[#5E936C] font-medium">{product.quantity}</span>
               </div>
 
-              <div className="flex justify-between items-center mt-2">
+              {/* Price & Cart Controls */}
+              <div
+                className="flex justify-between items-center mt-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex flex-col">
-                  {product.originalPrice &&
-                  product.originalPrice > product.price ? (
+                  {product.originalPrice && product.originalPrice > product.price ? (
                     <div className="flex items-center gap-1">
                       <span className="text-gray-400 line-through text-xs">
                         ₹{product.originalPrice}
@@ -1139,30 +1082,21 @@ export default function Products() {
                       </span>
                     </div>
                   ) : (
-                    <span className="text-green-800 font-bold text-sm">
-                      ₹{product.price}
-                    </span>
+                    <span className="text-green-800 font-bold text-sm">₹{product.price}</span>
                   )}
                 </div>
 
                 {quantity > 0 ? (
-                  <div
-                    className="flex items-center gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() =>
-                        updateQuantity(product.id, -1)
-                      }
+                      onClick={() => updateQuantity(product.id, quantity - 1)}
                       className="bg-[#5E936C] text-white p-1 text-xs rounded hover:bg-[#3E5F44]"
                     >
                       <FaMinus size={10} />
                     </button>
                     <span className="px-1 text-sm">{quantity}</span>
                     <button
-                      onClick={() =>
-                        updateQuantity(product.id, 1)
-                      }
+                      onClick={() => updateQuantity(product.id, quantity + 1)}
                       className="bg-[#5E936C] text-white p-1 text-xs rounded hover:bg-[#3E5F44]"
                     >
                       <FaPlus size={10} />
@@ -1170,10 +1104,7 @@ export default function Products() {
                   </div>
                 ) : (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCart(product);
-                    }}
+                    onClick={() => addToCart(product, 1)}
                     className="bg-[#5E936C] text-white px-3 py-1 text-xs rounded hover:bg-[#3E5F44] transition"
                   >
                     Add to Cart

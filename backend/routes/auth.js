@@ -1,28 +1,21 @@
+// backend/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const { sql, config } = require('../config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-const JWT_SECRET = 'your_jwt_secret'; // put this in env variables in prod
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 const SALT_ROUNDS = 10;
 
-// Nodemailer transporter (using Gmail SMTP for example)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'your_email@gmail.com',
-    pass: 'your_email_app_password', // Use app password or OAuth2
-  },
-});
-
-// Signup
+// ===== SIGNUP =====
 router.post('/signup', async (req, res) => {
   const { email, password, name } = req.body;
 
-  if (!email || !password || !name)
+  if (!email || !password || !name) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
+  }
 
   try {
     const pool = await sql.connect(config);
@@ -32,38 +25,49 @@ router.post('/signup', async (req, res) => {
       .input('email', sql.VarChar(255), email)
       .query('SELECT * FROM Users WHERE email = @email');
 
-    if (existingUser.recordset.length > 0)
+    if (existingUser.recordset.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // Insert user with unverified email
-    await pool.request()
+    // Insert user with isVerified = 1 for dev/testing
+    const insertResult = await pool.request()
       .input('name', sql.VarChar(100), name)
       .input('email', sql.VarChar(255), email)
       .input('password', sql.VarChar(255), hashedPassword)
-      .input('isVerified', sql.Bit, 0)
+      .input('isVerified', sql.Bit, 1) // automatically verified
       .query(`
         INSERT INTO Users (name, email, password, isVerified)
+        OUTPUT INSERTED.id
         VALUES (@name, @email, @password, @isVerified)
       `);
 
-    // TODO: Send verification email here (optional)
+    const userId = insertResult.recordset[0].id;
 
-    res.json({ message: 'Signup successful. Please verify your email.' });
+    // Generate JWT token
+    const token = jwt.sign({ id: userId, email }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      message: 'Signup successful',
+      token,
+      user: { id: userId, name, email, isVerified: true }
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error('Signup Error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Login
+// ===== LOGIN =====
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
+  if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
+  }
 
   try {
     const pool = await sql.connect(config);
@@ -72,27 +76,32 @@ router.post('/login', async (req, res) => {
       .input('email', sql.VarChar(255), email)
       .query('SELECT * FROM Users WHERE email = @email');
 
-    if (userResult.recordset.length === 0)
+    if (userResult.recordset.length === 0) {
       return res.status(400).json({ error: 'Invalid email or password' });
+    }
 
     const user = userResult.recordset[0];
 
     const validPassword = await bcrypt.compare(password, user.password);
-
-    if (!validPassword)
+    if (!validPassword) {
       return res.status(400).json({ error: 'Invalid email or password' });
+    }
 
-    if (!user.isVerified)
+    if (!user.isVerified) {
       return res.status(403).json({ error: 'Email not verified' });
+    }
 
-    // Create JWT token
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: '7d',
+    // Generate JWT token
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, isVerified: user.isVerified }
     });
 
-    res.json({ message: 'Login successful', token, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    console.error(err);
+    console.error('Login Error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

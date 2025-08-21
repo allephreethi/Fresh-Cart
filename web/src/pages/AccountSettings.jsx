@@ -1,366 +1,397 @@
-// AccountSettings.jsx
-import { useState, useRef } from 'react';
+// src/pages/AccountSettings.jsx
+import { useState, useEffect } from "react";
 import {
   User,
+  Mail,
   Lock,
-  Settings,
-  X,
-  MapPin,
-  Upload,
   Eye,
   EyeOff,
+  Upload,
   Pencil,
   Trash2,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// InputField with eye toggle for passwords
-const InputField = ({ name, type = 'text', value, onChange, placeholder, error }) => {
-  const [show, setShow] = useState(false);
-  const isPassword = type === 'password';
-
-  return (
-    <div className="relative">
-      <input
-        type={isPassword && show ? 'text' : type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={`w-full p-2 rounded-md bg-[#E8FFD7] pr-10 ${error ? 'border border-red-500' : ''}`}
-      />
-      {isPassword && (
-        <button
-          type="button"
-          onClick={() => setShow(!show)}
-          aria-label={show ? 'Hide password' : 'Show password'}
-          className="absolute right-2 top-2 text-[#5E936C]"
-        >
-          {show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-        </button>
-      )}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-    </div>
-  );
-};
-
-// Modal component
-const Modal = ({ title, children, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 40 }}
-      className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 relative"
-    >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
-      >
-        <X className="w-5 h-5" />
-      </button>
-      <h2 className="text-xl font-bold mb-4 text-[#5E936C]">{title}</h2>
-      {children}
-    </motion.div>
-  </div>
-);
-
-// Validation
-const validate = (data, fields) => {
-  const errors = {};
-  fields.forEach((field) => {
-    if (!data[field]) errors[field] = 'This field is required';
-  });
-  return errors;
-};
+  Plus,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import api from "../api/axios";
+import { useUser } from "../context/UserContext";
 
 export default function AccountSettings() {
-  const [activeModal, setActiveModal] = useState(null);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    newPassword: '',
-    confirmPassword: '',
-    notify: false,
-    addressFullName: '',
-    mobile: '',
-    pincode: '',
-    address: '',
+  const { user, updateUser, updateProfilePic, getProfileImageUrl } = useUser();
+  const userId = Number(user?.id);
+
+  const [userData, setUserData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    profileFile: null,
   });
-  const [formErrors, setFormErrors] = useState({});
-  const [editingAddress, setEditingAddress] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [profileImage, setProfileImage] = useState(null);
-  const [savedAddresses, setSavedAddresses] = useState([]);
-  const fileRef = useRef();
+  const [showPassword, setShowPassword] = useState(false);
+  const [addresses, setAddresses] = useState([]);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editAddress, setEditAddress] = useState(null);
+  const [addressForm, setAddressForm] = useState(initialAddressForm());
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  function initialAddressForm() {
+    return {
+      fullName: "",
+      street: "",
+      postalCode: "",
+      label: "Home",
+      city: "",
+      state: "",
+      country: "",
+    };
+  }
 
-  const handleClose = () => {
-    setActiveModal(null);
-    setFormErrors({});
-    setFormData((prev) => ({
-      ...prev,
-      password: '',
-      newPassword: '',
-      confirmPassword: '',
-      addressFullName: '',
-      mobile: '',
-      pincode: '',
-      address: '',
-    }));
-    setEditingAddress(false);
-    setEditingIndex(null);
-  };
+  // ===== Load User + Addresses =====
+  useEffect(() => {
+    if (!userId) return;
 
-  const openAddressModal = (edit = false, index = null) => {
-    if (edit && index !== null) {
-      const addr = savedAddresses[index];
-      setFormData((prev) => ({
-        ...prev,
-        addressFullName: addr.fullName,
-        mobile: addr.mobile,
-        pincode: addr.pincode,
-        address: addr.address,
-      }));
-      setEditingIndex(index);
+    const fetchData = async () => {
+      try {
+        const userRes = await api.get(`/api/users/${userId}`);
+        setUserData({
+          name: userRes.data.name || "",
+          email: userRes.data.email || "",
+          password: "",
+          profileFile: null,
+        });
+
+        // Fetch addresses
+        try {
+          const addrRes = await api.get(`/api/addresses/user/${userId}`);
+          setAddresses(Array.isArray(addrRes.data) ? addrRes.data : []);
+        } catch (addrErr) {
+          if (addrErr.response?.status === 404) setAddresses([]);
+          else console.error("❌ Fetch addresses error:", addrErr.response || addrErr);
+        }
+      } catch (err) {
+        console.error("❌ Fetch user error:", err.response || err);
+        toast.error("Failed to load account data");
+      }
+    };
+
+    fetchData();
+  }, [userId]);
+
+  // ===== Profile Update =====
+  const handleProfileUpdate = async () => {
+    if (!userId) return;
+    try {
+      const formData = new FormData();
+      formData.append("name", userData.name);
+      formData.append("email", userData.email);
+      if (userData.password) formData.append("password", userData.password);
+
+      const res = await api.put(`/api/users/update/${userId}`, formData);
+      const updatedUser = res.data.user || res.data;
+
+      updateUser(updatedUser);
+      setUserData((prev) => ({ ...prev, password: "" }));
+      toast.success("Profile updated ✅");
+    } catch (err) {
+      console.error("❌ Profile update error:", err.response || err);
+      toast.error("Failed to update profile");
     }
-    setEditingAddress(edit);
-    setActiveModal('address');
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setProfileImage(reader.result);
-      reader.readAsDataURL(file);
+  // ===== Profile Pic Upload =====
+  const handleProfilePicUpload = async (file) => {
+    if (!userId || !file) return;
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      const res = await api.put(`/api/users/update/${userId}`, formData);
+      const updatedUser = res.data.user || res.data;
+
+      updateUser(updatedUser);
+      if (updatedUser.profileImage) updateProfilePic(updatedUser.profileImage);
+
+      setUserData((prev) => ({ ...prev, profileFile: null }));
+      toast.success("Profile picture updated ✅");
+    } catch (err) {
+      console.error("❌ Profile pic upload error:", err.response || err);
+      toast.error("Failed to upload profile picture");
     }
   };
 
-  const handleDeleteAddress = (index) => {
-    const updated = [...savedAddresses];
-    updated.splice(index, 1);
-    setSavedAddresses(updated);
-    toast.success('Address deleted');
+  // ===== Save Address =====
+  const handleSaveAddress = async () => {
+    if (!userId) return;
+
+    const { fullName, street, postalCode, label } = addressForm;
+    if (!fullName || !street || !postalCode || !label) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    try {
+      if (editAddress) {
+        // Update address
+        await api.put(`/api/addresses/${editAddress.id}`, addressForm);
+        setAddresses((prev) =>
+          prev.map((a) => (a.id === editAddress.id ? { ...a, ...addressForm } : a))
+        );
+        toast.success("Address updated ✅");
+      } else {
+        // Add new address
+        const res = await api.post(`/api/addresses/${userId}`, addressForm);
+        const newAddress = { id: res.data.id, ...addressForm };
+        setAddresses((prev) => [...prev, newAddress]);
+        toast.success("Address added ✅");
+      }
+      handleCloseModal();
+    } catch (err) {
+      console.error("❌ Add/update address error:", err.response || err);
+      toast.error("Failed to save address");
+    }
   };
+
+  // ===== Delete Address =====
+  const handleDeleteAddress = async (id) => {
+    try {
+      await api.delete(`/api/addresses/${id}`);
+      setAddresses((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Address deleted ✅");
+    } catch (err) {
+      console.error("❌ Delete address error:", err.response || err);
+      toast.error("Failed to delete address");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowAddressModal(false);
+    setEditAddress(null);
+    setAddressForm(initialAddressForm());
+  };
+
+  if (!userId) return null;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="p-6 bg-gray-50 min-h-screen">
       <ToastContainer />
-      <div className="bg-white shadow-xl rounded-2xl p-6 md:p-10 space-y-8 border border-[#93DA97]">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#5E936C]">Account Settings</h1>
-          <p className="text-zinc-600 mt-2">Manage your personal info, security, preferences & addresses.</p>
-          <div className="flex justify-center mt-4">
-            <div className="relative group">
+
+      {/* Profile Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white shadow-lg rounded-2xl p-6 mb-6 max-w-2xl mx-auto"
+      >
+        <h2 className="text-xl font-bold mb-4">Personal Information</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-20 h-20 rounded-full overflow-hidden border">
+            {userData.profileFile ? (
               <img
-                src={profileImage || 'https://via.placeholder.com/100'}
+                src={URL.createObjectURL(userData.profileFile)}
                 alt="Profile"
-                className="w-24 h-24 rounded-full border-4 border-[#E8FFD7] object-cover"
+                className="w-full h-full object-cover"
               />
-              <button
-                onClick={() => fileRef.current.click()}
-                className="absolute bottom-0 right-0 bg-[#5E936C] p-1 rounded-full text-white hover:bg-[#4e7b5b]"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
-              <input
-                type="file"
-                ref={fileRef}
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
+            ) : (
+              <img
+                src={getProfileImageUrl()}
+                alt="Profile"
+                className="w-full h-full object-cover"
               />
-            </div>
+            )}
           </div>
+          <label className="flex items-center gap-2 cursor-pointer bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm hover:bg-green-200">
+            <Upload size={16} /> Change
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setUserData({ ...userData, profileFile: file });
+                handleProfilePicUpload(file);
+              }}
+            />
+          </label>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Section icon={<User className="w-6 h-6 text-[#5E936C] mt-1" />} title="Personal Info" desc="Update your name & email."
-            onClick={() => setActiveModal('info')} btnText="Edit Info" />
+        <InputRow
+          icon={<User size={18} />}
+          type="text"
+          placeholder="Your Name"
+          value={userData.name}
+          onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+        />
+        <InputRow
+          icon={<Mail size={18} />}
+          type="email"
+          placeholder="Your Email"
+          value={userData.email}
+          onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+        />
+        <div className="flex items-center gap-2 mb-3 border rounded-lg p-2">
+          <Lock size={18} />
+          <input
+            type={showPassword ? "text" : "password"}
+            className="flex-1 outline-none"
+            placeholder="New Password"
+            value={userData.password}
+            onChange={(e) => setUserData({ ...userData, password: e.target.value })}
+          />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        <button
+          onClick={handleProfileUpdate}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+        >
+          Save Changes
+        </button>
+      </motion.div>
 
-          <Section icon={<Lock className="w-6 h-6 text-[#5E936C] mt-1" />} title="Change Password" desc="Update your password regularly."
-            onClick={() => setActiveModal('password')} btnText="Update Password" />
-
-          <Section icon={<Settings className="w-6 h-6 text-[#5E936C] mt-1" />} title="Preferences" desc="Notification preferences."
-            onClick={() => setActiveModal('preferences')} btnText="Manage Preferences" />
-
-          <Section icon={<MapPin className="w-6 h-6 text-[#5E936C] mt-1" />} title="Saved Addresses" desc="Your delivery addresses."
-            onClick={() => openAddressModal(false)} btnText="Add Address" />
+      {/* Addresses Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white shadow-lg rounded-2xl p-6 max-w-2xl mx-auto"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-800">Saved Addresses</h2>
+          <button
+            onClick={() => setShowAddressModal(true)}
+            className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
+          >
+            <Plus size={18} /> Add Address
+          </button>
         </div>
 
-        {/* Address list */}
-        {savedAddresses.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-[#5E936C] mb-4">Your Saved Addresses</h2>
-            <div className="space-y-4">
-              {savedAddresses.map((addr, index) => (
-                <div key={index} className="bg-[#f9fff5] border border-[#E8FFD7] rounded-lg p-4 flex justify-between items-start gap-4">
-                  <div>
-                    <h3 className="font-semibold text-zinc-800">{addr.fullName}</h3>
-                    <p className="text-zinc-500 text-sm">{addr.address}</p>
-                    <p className="text-zinc-500 text-sm mt-1">📞 {addr.mobile} | 📍 {addr.pincode}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openAddressModal(true, index)}
-                      className="text-[#5E936C] hover:text-[#4e7b5b]"
-                      aria-label="Edit Address"
-                    >
-                      <Pencil className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteAddress(index)}
-                      className="text-red-500 hover:text-red-700"
-                      aria-label="Delete Address"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {addresses.length === 0 ? (
+          <p className="text-gray-500">No addresses saved yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {addresses.map((addr) => (
+              <AddressCard
+                key={addr.id}
+                addr={addr}
+                onEdit={() => {
+                  setEditAddress(addr);
+                  setAddressForm(addr);
+                  setShowAddressModal(true);
+                }}
+                onDelete={() => handleDeleteAddress(addr.id)}
+              />
+            ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       <AnimatePresence>
-        {activeModal === 'info' && (
-          <Modal title="Edit Personal Info" onClose={handleClose}>
-            <form
-              className="grid md:grid-cols-2 gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const errors = validate(formData, ['fullName', 'email']);
-                setFormErrors(errors);
-                if (Object.keys(errors).length === 0) {
-                  toast.success('Info updated');
-                  handleClose();
-                }
-              }}
-            >
-              <InputField name="fullName" value={formData.fullName} onChange={handleInputChange} placeholder="Full Name" error={formErrors.fullName} />
-              <InputField type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" error={formErrors.email} />
-              <button type="submit" className="col-span-2 w-full bg-[#5E936C] text-white py-2 rounded-md hover:bg-[#4e7b5b]">Save Changes</button>
-            </form>
-          </Modal>
-        )}
-
-        {activeModal === 'password' && (
-          <Modal title="Change Password" onClose={handleClose}>
-            <form
-              className="grid md:grid-cols-2 gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const errors = validate(formData, ['password', 'newPassword', 'confirmPassword']);
-                if (formData.newPassword !== formData.confirmPassword) {
-                  errors.confirmPassword = 'Passwords do not match';
-                }
-                setFormErrors(errors);
-                if (Object.keys(errors).length === 0) {
-                  toast.success('Password updated');
-                  handleClose();
-                }
-              }}
-            >
-              <InputField type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Current Password" error={formErrors.password} />
-              <InputField type="password" name="newPassword" value={formData.newPassword} onChange={handleInputChange} placeholder="New Password" error={formErrors.newPassword} />
-              <InputField type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} placeholder="Confirm New Password" error={formErrors.confirmPassword} />
-              <button type="submit" className="col-span-2 w-full bg-[#5E936C] text-white py-2 rounded-md hover:bg-[#4e7b5b]">Update Password</button>
-            </form>
-          </Modal>
-        )}
-
-        {activeModal === 'preferences' && (
-          <Modal title="Manage Preferences" onClose={handleClose}>
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                toast.success('Preferences saved');
-                handleClose();
-              }}
-            >
-              <label className="flex items-center gap-2 text-zinc-700">
-                <input type="checkbox" name="notify" checked={formData.notify} onChange={handleInputChange} className="accent-[#5E936C]" />
-                Enable Notifications
-              </label>
-              <button type="submit" className="w-full bg-[#5E936C] text-white py-2 rounded-md hover:bg-[#4e7b5b]">Save Preferences</button>
-            </form>
-          </Modal>
-        )}
-
-        {activeModal === 'address' && (
-          <Modal title={editingAddress ? 'Edit Address' : 'Add New Address'} onClose={handleClose}>
-            <form
-              className="grid md:grid-cols-2 gap-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const errors = validate(formData, ['addressFullName', 'mobile', 'pincode', 'address']);
-                setFormErrors(errors);
-                if (Object.keys(errors).length === 0) {
-                  const newAddress = {
-                    fullName: formData.addressFullName,
-                    mobile: formData.mobile,
-                    pincode: formData.pincode,
-                    address: formData.address,
-                  };
-                  let updated = [...savedAddresses];
-                  if (editingAddress && editingIndex !== null) {
-                    updated[editingIndex] = newAddress;
-                    toast.success('Address updated');
-                  } else {
-                    updated.push(newAddress);
-                    toast.success('Address saved');
-                  }
-                  setSavedAddresses(updated);
-                  handleClose();
-                }
-              }}
-            >
-              <InputField name="addressFullName" value={formData.addressFullName} onChange={handleInputChange} placeholder="Full Name" error={formErrors.addressFullName} />
-              <InputField type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} placeholder="Mobile Number" error={formErrors.mobile} />
-              <InputField type="number" name="pincode" value={formData.pincode} onChange={handleInputChange} placeholder="Pincode" error={formErrors.pincode} />
-              <div className="md:col-span-2">
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Address"
-                  rows={3}
-                  className={`w-full p-2 rounded-md bg-[#E8FFD7] ${formErrors.address ? 'border border-red-500' : ''}`}
-                ></textarea>
-                {formErrors.address && <p className="text-red-500 text-sm">{formErrors.address}</p>}
-              </div>
-              <button type="submit" className="col-span-2 w-full bg-[#5E936C] text-white py-2 rounded-md hover:bg-[#4e7b5b]">{editingAddress ? 'Update Address' : 'Save Address'}</button>
-            </form>
-          </Modal>
+        {showAddressModal && (
+          <AddressModal
+            addressForm={addressForm}
+            setAddressForm={setAddressForm}
+            onClose={handleCloseModal}
+            onSave={handleSaveAddress}
+            editAddress={editAddress}
+          />
         )}
       </AnimatePresence>
     </div>
   );
 }
 
-// Section Card
-function Section({ icon, title, desc, onClick, btnText }) {
+/* ================= HELPER COMPONENTS ================= */
+function InputRow({ icon, ...props }) {
   return (
-    <section className="p-5 rounded-xl border border-[#E8FFD7] bg-[#f9fff5] flex gap-4 items-start">
+    <div className="flex items-center gap-2 mb-3 border rounded-lg p-2">
       {icon}
-      <div className="flex-1">
-        <h2 className="text-lg font-semibold text-zinc-800">{title}</h2>
-        <p className="text-zinc-500 text-sm mt-1">{desc}</p>
-        <button onClick={onClick} className="mt-3 px-4 py-2 bg-[#E8FFD7] hover:bg-[#d3f6c9] text-sm text-[#5E936C] font-medium rounded-lg transition">{btnText}</button>
+      <input {...props} className="flex-1 outline-none" />
+    </div>
+  );
+}
+
+function AddressCard({ addr, onEdit, onDelete }) {
+  return (
+    <div className="border rounded-lg p-4 flex justify-between items-start">
+      <div>
+        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs mr-2">
+          {addr.label}
+        </span>
+        <p className="font-semibold">{addr.fullName}</p>
+        <p className="text-gray-600">{addr.street}</p>
+        <p className="text-gray-600">Pincode: {addr.postalCode}</p>
+        {addr.city && <p className="text-gray-600">{addr.city}</p>}
+        {addr.state && <p className="text-gray-600">{addr.state}</p>}
+        {addr.country && <p className="text-gray-600">{addr.country}</p>}
       </div>
-    </section>
+      <div className="flex gap-2">
+        <button
+          onClick={onEdit}
+          className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          onClick={onDelete}
+          className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AddressModal({ addressForm, setAddressForm, onClose, onSave, editAddress }) {
+  return (
+    <motion.div
+      className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md"
+      >
+        <h3 className="text-lg font-bold mb-4">
+          {editAddress ? "Edit Address" : "Add New Address"}
+        </h3>
+
+        {["fullName", "street", "postalCode", "city", "state", "country"].map((field) => (
+          <input
+            key={field}
+            type="text"
+            placeholder={field.replace(/([A-Z])/g, " $1")}
+            value={addressForm[field]}
+            onChange={(e) => setAddressForm({ ...addressForm, [field]: e.target.value })}
+            className="w-full mb-2 p-2 border rounded"
+          />
+        ))}
+
+        <select
+          value={addressForm.label}
+          onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
+          className="w-full mb-4 p-2 border rounded"
+        >
+          <option value="Home">Home</option>
+          <option value="Work">Work</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">
+            Cancel
+          </button>
+          <button
+            onClick={onSave}
+            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+          >
+            Save
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

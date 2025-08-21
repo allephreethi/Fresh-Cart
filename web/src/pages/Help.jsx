@@ -1,32 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Phone, ChevronDown, Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 const faqs = [
-  {
-    question: 'How do I track my order?',
-    answer: 'You can track your order from the "My Orders" page after logging in.',
-  },
-  {
-    question: 'Can I cancel or modify my order?',
-    answer: 'Yes, orders can be canceled or modified within 1 hour of placement.',
-  },
-  {
-    question: 'How do I update my delivery address?',
-    answer: 'Go to Account Settings > Saved Addresses to update your delivery address.',
-  },
-  {
-    question: 'What payment methods are accepted?',
-    answer: 'We accept UPI, credit/debit cards, net banking, and cash on delivery.',
-  },
+  { question: 'How do I track my order?', answer: 'You can track your order from the "My Orders" page after logging in.' },
+  { question: 'Can I cancel or modify my order?', answer: 'Yes, orders can be canceled or modified within 1 hour of placement.' },
+  { question: 'How do I update my delivery address?', answer: 'Go to Account Settings > Saved Addresses to update your delivery address.' },
+  { question: 'What payment methods are accepted?', answer: 'We accept UPI, credit/debit cards, net banking, and cash on delivery.' },
 ];
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export default function Help() {
   const [openIndex, setOpenIndex] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleFAQ = (index) => setOpenIndex(openIndex === index ? null : index);
+
+  // Fetch user requests from backend
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/help-request`);
+      setRequests(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  // Show toast
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type }), 3000);
+  };
+
+  // Submit form handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = {
+      name: e.target.name.value,
+      email: e.target.email.value,
+      message: e.target.message.value,
+    };
+    try {
+      await axios.post(`${API_URL}/api/help-request`, formData);
+      setShowForm(false);
+      e.target.reset();
+      fetchRequests();
+      showToast('Request submitted successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to submit request.', 'error');
+    }
+  };
+
+  // Delete request
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this request?')) return;
+    try {
+      await axios.delete(`${API_URL}/api/help-request/${id}`);
+      fetchRequests();
+      showToast('Request deleted successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to delete request.', 'error');
+    }
   };
 
   return (
@@ -51,9 +95,7 @@ export default function Help() {
                 >
                   {faq.question}
                   <ChevronDown
-                    className={`w-4 h-4 transform transition-transform ${
-                      openIndex === index ? 'rotate-180' : ''
-                    }`}
+                    className={`w-4 h-4 transform transition-transform ${openIndex === index ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {openIndex === index && (
@@ -79,10 +121,7 @@ export default function Help() {
             icon={<Mail className="w-5 h-5" />}
             title="Email Us"
             desc={
-              <a
-                href="mailto:support@freshcart.com"
-                className="text-[#5E936C] underline hover:text-[#4e7b5b]"
-              >
+              <a href="mailto:support@freshcart.com" className="text-[#5E936C] underline hover:text-[#4e7b5b]">
                 support@freshcart.com
               </a>
             }
@@ -100,9 +139,33 @@ export default function Help() {
             }
           />
         </div>
+
+        {/* User Submitted Requests */}
+        {requests.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-xl font-semibold text-[#5E936C] mb-4">Your Submitted Requests</h2>
+            <div className="space-y-4">
+              {requests.map((req) => (
+                <div key={req.id} className="border p-4 rounded-md bg-white flex justify-between items-start">
+                  <div>
+                    <p><strong>Name:</strong> {req.name}</p>
+                    <p><strong>Email:</strong> {req.email}</p>
+                    <p><strong>Message:</strong> {req.message}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(req.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Modal with Animation */}
+      {/* Modal Form */}
       <AnimatePresence>
         {showForm && (
           <motion.div
@@ -125,22 +188,28 @@ export default function Help() {
                 <X className="w-5 h-5" />
               </button>
               <h2 className="text-xl font-semibold text-[#5E936C] mb-5">Submit Your Request</h2>
-              <form className="space-y-5">
+              <form className="space-y-5" onSubmit={handleSubmit}>
                 <div className="grid md:grid-cols-2 gap-4">
                   <input
                     type="text"
+                    name="name"
                     placeholder="Your Name"
+                    required
                     className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                   />
                   <input
                     type="email"
+                    name="email"
                     placeholder="Your Email"
+                    required
                     className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                   />
                 </div>
                 <textarea
+                  name="message"
                   rows="4"
                   placeholder="How can we help you?"
+                  required
                   className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                 ></textarea>
                 <button
@@ -151,6 +220,23 @@ export default function Help() {
                 </button>
               </form>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            key={toast.message}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-md shadow-lg text-white z-50 ${
+              toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            }`}
+          >
+            {toast.message}
           </motion.div>
         )}
       </AnimatePresence>

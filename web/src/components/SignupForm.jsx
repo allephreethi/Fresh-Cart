@@ -1,3 +1,4 @@
+// src/components/SignupForm.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,7 +10,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setLoading(true);
@@ -30,11 +31,12 @@ export default function SignupForm() {
       } else {
         setMessage(data.error || 'Signup failed');
       }
-    } catch {
+    } catch (err) {
+      console.error('Signup request failed:', err);
       setLoading(false);
       setMessage('Network error');
     }
-  }
+  };
 
   return (
     <form

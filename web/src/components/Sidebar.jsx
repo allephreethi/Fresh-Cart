@@ -24,11 +24,11 @@ export default function Sidebar() {
   const { isExpanded, setHover } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const { user, logoutUser } = useUser();
+  const { user, getProfileImageUrl, logoutUser } = useUser();
 
   const [sidebarHeight, setSidebarHeight] = useState(window.innerHeight - 64);
 
+  // ===== Adjust sidebar height dynamically =====
   useEffect(() => {
     function updateSidebarHeight() {
       const headerHeight = 64;
@@ -42,7 +42,6 @@ export default function Sidebar() {
 
       const footerRect = footer.getBoundingClientRect();
       const footerTop = footerRect.top;
-
       const maxHeight = viewportHeight - headerHeight;
       const heightWithoutOverlap = footerTop - headerHeight;
 
@@ -67,6 +66,9 @@ export default function Sidebar() {
   function handleLogin() {
     navigate('/login');
   }
+
+  // ===== Get real-time profile image =====
+  const profileImageUrl = user ? getProfileImageUrl() : null;
 
   return (
     <motion.div
@@ -95,8 +97,8 @@ export default function Sidebar() {
       <div className="flex items-center justify-center h-16 border-b border-gray-200 px-2">
         {user ? (
           <motion.img
-            whileHover={{ scale: 1.1 }}
-            src={user.profilePic || `${process.env.PUBLIC_URL}/img/profile.png`}
+            whileHover={{ scale: 1.05 }}
+            src={profileImageUrl || `${process.env.PUBLIC_URL}/img/profile.png`}
             alt="Profile"
             className="w-9 h-9 rounded-full object-cover"
             style={{ flexShrink: 0 }}
@@ -129,9 +131,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Logout or Empty space */}
-      <div className="mb-4 px-2" style={{ minWidth: 0 }}>
-        {user ? (
+      {/* Logout */}
+      {user && (
+        <div className="mb-4 px-2" style={{ minWidth: 0 }}>
           <button
             onClick={handleLogout}
             className="group flex items-center gap-3 px-3 py-2 w-full text-red-600 hover:bg-red-100 rounded-md transition-all whitespace-nowrap"
@@ -139,17 +141,10 @@ export default function Sidebar() {
             aria-label="Logout"
           >
             <LogOut size={20} />
-            {isExpanded && (
-              <span className="text-sm truncate" style={{ minWidth: 0 }}>
-                Logout
-              </span>
-            )}
+            {isExpanded && <span className="text-sm truncate">Logout</span>}
           </button>
-        ) : (
-          // Optionally you can show nothing or a placeholder here when not logged in
-          <div style={{ height: 40 }} />
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }

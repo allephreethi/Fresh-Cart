@@ -1,12 +1,13 @@
+// src/components/AuthTabs.jsx
 import React, { useState } from "react";
-import LoginForm from "./LoginForm";   // adjust import path as needed
-import SignupForm from "./SignupForm"; // adjust import path as needed
+import LoginForm from "./LoginForm";   // adjust import path
+import SignupForm from "./SignupForm"; // adjust import path
 
 export default function AuthTabs() {
   const [activeTab, setActiveTab] = useState("login");
 
   return (
-    <>
+    <div className="auth-tabs-container">
       <style>{`
         .auth-tabs-container {
           max-width: 400px;
@@ -44,50 +45,48 @@ export default function AuthTabs() {
         }
       `}</style>
 
-      <div className="auth-tabs-container">
-        <div className="tabs" role="tablist">
-          <button
-            className={`tab-btn ${activeTab === "login" ? "active" : ""}`}
-            onClick={() => setActiveTab("login")}
-            role="tab"
-            aria-selected={activeTab === "login"}
-            aria-controls="login-panel"
-            id="login-tab"
-            type="button"
-          >
-            Login
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "signup" ? "active" : ""}`}
-            onClick={() => setActiveTab("signup")}
-            role="tab"
-            aria-selected={activeTab === "signup"}
-            aria-controls="signup-panel"
-            id="signup-tab"
-            type="button"
-          >
-            Sign Up
-          </button>
-        </div>
-
-        <div
-          id="login-panel"
-          role="tabpanel"
-          aria-labelledby="login-tab"
-          hidden={activeTab !== "login"}
+      <div className="tabs" role="tablist">
+        <button
+          className={`tab-btn ${activeTab === "login" ? "active" : ""}`}
+          onClick={() => setActiveTab("login")}
+          role="tab"
+          aria-selected={activeTab === "login"}
+          aria-controls="login-panel"
+          id="login-tab"
+          type="button"
         >
-          {activeTab === "login" && <LoginForm />}
-        </div>
-
-        <div
-          id="signup-panel"
-          role="tabpanel"
-          aria-labelledby="signup-tab"
-          hidden={activeTab !== "signup"}
+          Login
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "signup" ? "active" : ""}`}
+          onClick={() => setActiveTab("signup")}
+          role="tab"
+          aria-selected={activeTab === "signup"}
+          aria-controls="signup-panel"
+          id="signup-tab"
+          type="button"
         >
-          {activeTab === "signup" && <SignupForm />}
-        </div>
+          Sign Up
+        </button>
       </div>
-    </>
+
+      <div
+        id="login-panel"
+        role="tabpanel"
+        aria-labelledby="login-tab"
+        hidden={activeTab !== "login"}
+      >
+        {activeTab === "login" && <LoginForm />}
+      </div>
+
+      <div
+        id="signup-panel"
+        role="tabpanel"
+        aria-labelledby="signup-tab"
+        hidden={activeTab !== "signup"}
+      >
+        {activeTab === "signup" && <SignupForm />}
+      </div>
+    </div>
   );
 }

@@ -1,8 +1,9 @@
+// src/pages/Products.jsx
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FaHeart, FaPlus, FaMinus, FaStar } from "react-icons/fa";
 import { useAppContext } from "../context/AppContext";
-import { useLocation } from "react-router-dom";
-import ProductDetailModal from "./ProductDetailModal";
+import ProductDetailModal from "../components/ProductDetailModal";
 
 const productList = [
   {
@@ -267,14 +268,16 @@ export default function Products({ limit = productList.length, title = "All Prod
   const [quantities, setQuantities] = useState({});
   const location = useLocation();
 
-  // Modal state
+  // Product detail modal state
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // Read search query from URL
   const searchQuery = useMemo(() => {
-    const queryParams = new URLSearchParams(location.search);
-    return queryParams.get("search")?.toLowerCase() || "";
+    const params = new URLSearchParams(location.search);
+    return params.get("search")?.toLowerCase() || "";
   }, [location.search]);
 
+  // Filter products based on search
   const filteredProducts = useMemo(() => {
     return productList
       .filter(
@@ -285,6 +288,7 @@ export default function Products({ limit = productList.length, title = "All Prod
       .slice(0, limit);
   }, [searchQuery, limit]);
 
+  // Sync quantities with cart items
   useEffect(() => {
     const updated = {};
     cartItems.forEach((item) => {
@@ -293,21 +297,21 @@ export default function Products({ limit = productList.length, title = "All Prod
     setQuantities(updated);
   }, [cartItems]);
 
+  // Cart handlers
   const handleAddToCart = (product) => {
-    addToCart(product);
+    addToCart({ ...product, quantity: 1 });
     setQuantities((prev) => ({ ...prev, [product.id]: 1 }));
   };
 
   const increaseQty = (product) => {
-    addToCart(product);
-    setQuantities((prev) => ({
-      ...prev,
-      [product.id]: (prev[product.id] || 1) + 1,
-    }));
+    const currentQty = quantities[product.id] || 0;
+    const newQty = currentQty + 1;
+    addToCart({ ...product, quantity: newQty });
+    setQuantities((prev) => ({ ...prev, [product.id]: newQty }));
   };
 
   const decreaseQty = (product) => {
-    const currentQty = quantities[product.id] || 1;
+    const currentQty = quantities[product.id] || 0;
     if (currentQty <= 1) {
       removeFromCart(product.id);
       setQuantities((prev) => {
@@ -315,11 +319,9 @@ export default function Products({ limit = productList.length, title = "All Prod
         return rest;
       });
     } else {
-      addToCart({ ...product, quantity: currentQty - 1 });
-      setQuantities((prev) => ({
-        ...prev,
-        [product.id]: currentQty - 1,
-      }));
+      const newQty = currentQty - 1;
+      addToCart({ ...product, quantity: newQty });
+      setQuantities((prev) => ({ ...prev, [product.id]: newQty }));
     }
   };
 
@@ -347,7 +349,7 @@ export default function Products({ limit = productList.length, title = "All Prod
                     : "bg-white"
                 }`}
               >
-                {/* Wishlist Icon */}
+                {/* Wishlist */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -439,10 +441,12 @@ export default function Products({ limit = productList.length, title = "All Prod
       )}
 
       {/* Product Detail Modal */}
-      <ProductDetailModal
-        product={selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-      />
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </section>
   );
 }
