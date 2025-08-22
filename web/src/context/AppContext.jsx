@@ -1,5 +1,5 @@
 // src/context/AppContext.jsx
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 const AppContext = createContext();
@@ -11,15 +11,19 @@ export function AppProvider({ children }) {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [locationPopupOpen, setLocationPopupOpen] = useState(false);
+
   const [wishlistItems, setWishlistItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
+
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
+
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
+
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem("user");
@@ -28,6 +32,7 @@ export function AppProvider({ children }) {
       return null;
     }
   });
+
   const [profilePic, setProfilePic] = useState(() => {
     try {
       return localStorage.getItem("profilePic") || "";
@@ -35,8 +40,32 @@ export function AppProvider({ children }) {
       return "";
     }
   });
+
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [location, setLocation] = useState({ city: "", lat: null, lng: null });
+
+  // =================== HELPERS ===================
+  const resetAppState = useCallback(() => {
+    // wipe all user-scoped UI/data
+    setUser(null);
+    setProfilePic("");
+
+    setCartItems([]);
+    setWishlistItems([]);
+    setAddresses([]);
+    setNotifications([]);
+
+    setCartOpen(false);
+    setCheckoutOpen(false);
+    setWishlistOpen(false);
+    setNotificationsOpen(false);
+    setLoginModalOpen(false);
+    setLocationPopupOpen(false);
+
+    setLocation({ city: "", lat: null, lng: null });
+    // NOTE: do not force-reset theme if you want it global. If theme is user-specific, uncomment:
+    // setDarkMode(false);
+  }, []);
 
   // =================== LOCATION ===================
   const fetchLocation = () => {
@@ -71,15 +100,9 @@ export function AppProvider({ children }) {
                 `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_KEY}`
               );
               const components = gRes.data.results[0]?.address_components || [];
-              const cityComponent = components.find((c) =>
-                c.types.includes("locality")
-              );
-              const districtComponent = components.find((c) =>
-                c.types.includes("administrative_area_level_2")
-              );
-              const stateComponent = components.find((c) =>
-                c.types.includes("administrative_area_level_1")
-              );
+              const cityComponent = components.find((c) => c.types.includes("locality"));
+              const districtComponent = components.find((c) => c.types.includes("administrative_area_level_2"));
+              const stateComponent = components.find((c) => c.types.includes("administrative_area_level_1"));
               city =
                 cityComponent?.long_name ||
                 districtComponent?.long_name ||
@@ -96,11 +119,7 @@ export function AppProvider({ children }) {
               const res2 = await axios.get(
                 `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
               );
-              city =
-                res2.data.city ||
-                res2.data.locality ||
-                res2.data.principalSubdivision ||
-                "Unknown";
+              city = res2.data.city || res2.data.locality || res2.data.principalSubdivision || "Unknown";
             } catch (err2) {
               console.error("❌ BigDataCloud failed:", err2.message);
             }
@@ -138,58 +157,129 @@ export function AppProvider({ children }) {
     setNotifications((prev) => [newNotif, ...prev]);
   };
 
-  const removeNotification = (id) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const removeNotification = (id) => setNotifications((prev) => prev.filter((n) => n.id !== id));
   const clearNotifications = () => setNotifications([]);
-  const toggleNotifications = (state) =>
-    setNotificationsOpen(typeof state === "boolean" ? state : (prev) => !prev);
+  const toggleNotifications = (state) => setNotificationsOpen(typeof state === "boolean" ? state : (prev) => !prev);
+
+  // =================== SERVER FETCHERS (user-scoped) ===================
+  const fetchCartItems = useCallback(
+    async (userId = user?.id) => {
+      if (!userId) return setCartItems([]);
+      try {
+        const res = await axios.get(`${API_URL}/cart/${userId}`);
+        setCartItems(res.data || []);
+      } catch (err) {
+        console.error("❌ Fetch cart failed:", err.response?.data || err.message);
+        setCartItems([]);
+        showToast("Failed to fetch cart", "error");
+      }
+    },
+    [user?.id]
+  );
+
+  const fetchWishlistItems = useCallback(
+    async (userId = user?.id) => {
+      if (!userId) return setWishlistItems([]);
+      try {
+        const res = await axios.get(`${API_URL}/wishlist/${userId}`);
+        const normalized = (res.data || []).map((item) => ({
+          ...item,
+          productId: item.ProductId || item.productId,
+        }));
+        setWishlistItems(normalized);
+      } catch (err) {
+        console.error("❌ Fetch wishlist failed:", err.response?.data || err.message);
+        setWishlistItems([]);
+        showToast("Failed to fetch wishlist", "error");
+      }
+    },
+    [user?.id]
+  );
+
+  const fetchAddresses = useCallback(
+    async (userId = user?.id) => {
+      if (!userId) return setAddresses([]);
+      try {
+        const res = await axios.get(`${API_URL}/addresses/${userId}`);
+        setAddresses(res.data || []);
+      } catch (err) {
+        console.error("❌ Fetch addresses failed:", err.response?.data || err.message);
+        setAddresses([]);
+      }
+    },
+    [user?.id]
+  );
+
+  const fetchServerNotifications = useCallback(
+    async (userId = user?.id) => {
+      if (!userId) return setNotifications([]);
+      try {
+        const res = await axios.get(`${API_URL}/notifications/${userId}`);
+        setNotifications(res.data || []);
+      } catch (err) {
+        console.error("❌ Fetch notifications failed:", err.response?.data || err.message);
+        setNotifications([]);
+      }
+    },
+    [user?.id]
+  );
 
   // =================== AUTH ===================
-  const loginUser = (userData) => {
+  const loginUser = async (userData) => {
+    // 1) ensure clean slate before loading new account (prevents any old flash)
+    setCartItems([]);
+    setWishlistItems([]);
+    setAddresses([]);
+    setNotifications([]);
+
+    // 2) set identity and persist
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+
+    // 3) UI feedback
     showToast(`Welcome ${userData.name || "User"}!`);
-    addNotification(`Welcome ${userData.name || "User"}!`, "success");
+    // Optional: add a local welcome notification; will be replaced by server list when fetched
+    // addNotification(`Welcome ${userData.name || "User"}!`, "success");
+
+    // 4) fetch all user-scoped data in parallel
+    try {
+      await Promise.all([
+        fetchCartItems(userData.id),
+        fetchWishlistItems(userData.id),
+        fetchAddresses(userData.id),
+        fetchServerNotifications(userData.id),
+      ]);
+    } catch {
+      // individual fetchers already handle their own errors
+    }
+
+    // 5) close any auth modal
     closeLoginModal();
-    fetchCartItems(userData.id);
-    fetchWishlistItems(userData.id);
   };
 
   const logoutUser = () => {
-    setUser(null);
-    setProfilePic("");
+    // remove persisted identity first
     localStorage.removeItem("user");
-    setCartItems([]);
-    setWishlistItems([]);
+    localStorage.removeItem("profilePic");
+
+    // reset everything instantly so nothing from previous account is visible
+    resetAppState();
+
+    // user feedback (toast only; do NOT add to notifications to keep it clean for next login)
     showToast("Logged out successfully");
-    addNotification("Logged out successfully", "info");
   };
 
   const updateProfilePic = (url) => {
     setProfilePic(url);
     localStorage.setItem("profilePic", url);
     showToast("Profile picture updated");
-    addNotification("Profile picture updated", "success");
+    // this is user-local UI state; not persisted server-side here
   };
 
-  // =================== CART ===================
-  const fetchCartItems = async (userId = user?.id) => {
-    if (!userId) return setCartItems([]);
-    try {
-      const res = await axios.get(`${API_URL}/cart/${userId}`);
-      setCartItems(res.data || []);
-    } catch (err) {
-      console.error("❌ Fetch cart failed:", err.response?.data || err.message);
-      setCartItems([]);
-      showToast("Failed to fetch cart", "error");
-      addNotification("Failed to fetch cart", "error");
-    }
-  };
-
+  // =================== CART MUTATIONS ===================
   const addToCart = async (item, quantity = 1) => {
     if (!user) {
       showToast("Please login to add items", "error");
-      addNotification("Please login to add items", "error");
       openLoginModal();
       return;
     }
@@ -206,22 +296,16 @@ export function AppProvider({ children }) {
       const existingItem = cartItems.find((i) => i.productId === item.id);
       if (existingItem) {
         setCartItems(
-          cartItems.map((i) =>
-            i.productId === item.id
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
-          )
+          cartItems.map((i) => (i.productId === item.id ? { ...i, quantity: i.quantity + quantity } : i))
         );
       } else {
         setCartItems([...cartItems, { id: Date.now(), productId: item.id, ...item, quantity }]);
       }
 
       showToast(`${item.title} added to cart`);
-      addNotification(`${item.title} added to cart`, "success");
     } catch (err) {
       console.error("❌ Add to cart failed:", err.response?.data || err.message);
       showToast("Failed to add to cart", "error");
-      addNotification("Failed to add to cart", "error");
     }
   };
 
@@ -235,19 +319,11 @@ export function AppProvider({ children }) {
         productId,
         quantity: newQty,
       });
-      setCartItems(
-        cartItems.map((i) =>
-          i.productId === productId ? { ...i, quantity: newQty } : i
-        )
-      );
-      addNotification(`Updated quantity in cart`, "info");
+      setCartItems(cartItems.map((i) => (i.productId === productId ? { ...i, quantity: newQty } : i)));
+      showToast("Updated quantity in cart", "success");
     } catch (err) {
-      console.error(
-        "❌ Update quantity failed:",
-        err.response?.data || err.message
-      );
+      console.error("❌ Update quantity failed:", err.response?.data || err.message);
       showToast("Failed to update quantity", "error");
-      addNotification("Failed to update quantity", "error");
     }
   };
 
@@ -256,15 +332,10 @@ export function AppProvider({ children }) {
     try {
       await axios.delete(`${API_URL}/cart/remove/${user.id}/${productId}`);
       setCartItems(cartItems.filter((i) => i.productId !== productId));
-      showToast("Item removed from cart", "error");
-      addNotification("Item removed from cart", "error");
+      showToast("Item removed from cart", "success");
     } catch (err) {
-      console.error(
-        "❌ Remove from cart failed:",
-        err.response?.data || err.message
-      );
+      console.error("❌ Remove from cart failed:", err.response?.data || err.message);
       showToast("Failed to remove item", "error");
-      addNotification("Failed to remove item", "error");
     }
   };
 
@@ -272,16 +343,11 @@ export function AppProvider({ children }) {
     if (!user) return;
     try {
       await axios.post(`${API_URL}/cart/checkout`, { userId: user.id });
-      setCartItems([]); // ✅ now works because setCartItems is exposed
+      setCartItems([]);
       showToast("Cart cleared", "success");
-      addNotification("Cart cleared", "success");
     } catch (err) {
-      console.error(
-        "❌ Clear cart failed:",
-        err.response?.data || err.message
-      );
+      console.error("❌ Clear cart failed:", err.response?.data || err.message);
       showToast("Failed to clear cart", "error");
-      addNotification("Failed to clear cart", "error");
     }
   };
 
@@ -290,31 +356,10 @@ export function AppProvider({ children }) {
     return item ? item.quantity : 0;
   };
 
-  // =================== WISHLIST ===================
-  const fetchWishlistItems = async (userId = user?.id) => {
-    if (!userId) return setWishlistItems([]);
-    try {
-      const res = await axios.get(`${API_URL}/wishlist/${userId}`);
-      const normalized = (res.data || []).map((item) => ({
-        ...item,
-        productId: item.ProductId || item.productId,
-      }));
-      setWishlistItems(normalized);
-    } catch (err) {
-      console.error(
-        "❌ Fetch wishlist failed:",
-        err.response?.data || err.message
-      );
-      setWishlistItems([]);
-      showToast("Failed to fetch wishlist", "error");
-      addNotification("Failed to fetch wishlist", "error");
-    }
-  };
-
+  // =================== WISHLIST MUTATIONS ===================
   const toggleWishlistItem = async (item) => {
     if (!user) {
       showToast("Please login to use wishlist", "error");
-      addNotification("Please login to use wishlist", "error");
       openLoginModal();
       return;
     }
@@ -325,15 +370,10 @@ export function AppProvider({ children }) {
       try {
         await axios.delete(`${API_URL}/wishlist/remove/${user.id}/${item.id}`);
         setWishlistItems(wishlistItems.filter((i) => i.productId !== item.id));
-        showToast(`${item.title} removed from wishlist`, "error");
-        addNotification(`${item.title} removed from wishlist`, "error");
+        showToast(`${item.title} removed from wishlist`, "success");
       } catch (err) {
-        console.error(
-          "❌ Remove wishlist failed:",
-          err.response?.data || err.message
-        );
+        console.error("❌ Remove wishlist failed:", err.response?.data || err.message);
         showToast("Failed to remove from wishlist", "error");
-        addNotification("Failed to remove from wishlist", "error");
       }
     } else {
       try {
@@ -346,28 +386,19 @@ export function AppProvider({ children }) {
         });
 
         const newItem = {
-          id: res.data.id || Date.now(),
-          productId: res.data.productId || item.id,
-          title: res.data.title || item.title,
-          price: res.data.price || item.price,
-          image: res.data.image || item.image,
+          id: res.data?.id || Date.now(),
+          productId: res.data?.productId || item.id,
+          title: res.data?.title || item.title,
+          price: res.data?.price || item.price,
+          image: res.data?.image || item.image,
         };
 
-        setWishlistItems((prev) =>
-          prev.some((i) => i.productId === newItem.productId)
-            ? prev
-            : [...prev, newItem]
-        );
+        setWishlistItems((prev) => (prev.some((i) => i.productId === newItem.productId) ? prev : [...prev, newItem]));
 
         showToast(`${item.title} added to wishlist`, "success");
-        addNotification(`${item.title} added to wishlist`, "success");
       } catch (err) {
-        console.error(
-          "❌ Add wishlist failed:",
-          err.response?.data || err.message
-        );
+        console.error("❌ Add wishlist failed:", err.response?.data || err.message);
         showToast("Failed to add to wishlist", "error");
-        addNotification("Failed to add to wishlist", "error");
       }
     }
   };
@@ -378,18 +409,11 @@ export function AppProvider({ children }) {
     if (!user) return;
     try {
       await axios.delete(`${API_URL}/wishlist/remove/${user.id}/${productId}`);
-      setWishlistItems((prev) =>
-        prev.filter((i) => i.productId !== productId)
-      );
-      showToast("Item removed from wishlist", "error");
-      addNotification("Item removed from wishlist", "error");
+      setWishlistItems((prev) => prev.filter((i) => i.productId !== productId));
+      showToast("Item removed from wishlist", "success");
     } catch (err) {
-      console.error(
-        "❌ Remove wishlist failed:",
-        err.response?.data || err.message
-      );
+      console.error("❌ Remove wishlist failed:", err.response?.data || err.message);
       showToast("Failed to remove item", "error");
-      addNotification("Failed to remove item from wishlist", "error");
     }
   };
 
@@ -399,22 +423,16 @@ export function AppProvider({ children }) {
       await axios.delete(`${API_URL}/wishlist/clear/${user.id}`);
       setWishlistItems([]);
       showToast("Wishlist cleared", "success");
-      addNotification("Wishlist cleared", "success");
     } catch (err) {
-      console.error(
-        "❌ Clear wishlist failed:",
-        err.response?.data || err.message
-      );
+      console.error("❌ Clear wishlist failed:", err.response?.data || err.message);
       showToast("Failed to clear wishlist", "error");
-      addNotification("Failed to clear wishlist", "error");
     }
   };
 
   // =================== MODALS & UI ===================
   const toggleCart = () => setCartOpen((prev) => !prev);
   const toggleCheckout = (value) => setCheckoutOpen(value ?? !checkoutOpen);
-  const toggleWishlist = (state) =>
-    setWishlistOpen(typeof state === "boolean" ? state : (prev) => !prev);
+  const toggleWishlist = (state) => setWishlistOpen(typeof state === "boolean" ? state : (prev) => !prev);
   const openLocationPopup = () => {
     setLocationPopupOpen(true);
     fetchLocation();
@@ -424,12 +442,38 @@ export function AppProvider({ children }) {
   const closeLoginModal = () => setLoginModalOpen(false);
 
   // =================== EFFECTS ===================
+  // Keep in sync if user is restored/changed (e.g., after refresh or storage change)
   useEffect(() => {
     if (user?.id) {
+      // load data for the active session
       fetchCartItems();
       fetchWishlistItems();
+      fetchAddresses();
+      fetchServerNotifications();
+    } else {
+      // if no user (e.g., after logout) make sure state is empty
+      resetAppState();
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Optional: react to `storage` events (multi-tab logout/login)
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "user") {
+        const next = e.newValue ? JSON.parse(e.newValue) : null;
+        if (!next) {
+          // someone logged out in another tab
+          resetAppState();
+        } else {
+          // logged in from another tab
+          setUser(next);
+        }
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [resetAppState]);
 
   // =================== CONTEXT ===================
   return (
@@ -437,7 +481,7 @@ export function AppProvider({ children }) {
       value={{
         // Cart
         cartItems,
-        setCartItems, // ✅ expose for Checkout.jsx
+        setCartItems, // exposed for places like Checkout
         cartOpen,
         toggleCart,
         checkoutOpen,
@@ -459,6 +503,11 @@ export function AppProvider({ children }) {
         clearWishlist,
         fetchWishlistItems,
 
+        // Addresses
+        addresses,
+        setAddresses,
+        fetchAddresses,
+
         // Notifications
         notifications,
         notificationsOpen,
@@ -466,6 +515,7 @@ export function AppProvider({ children }) {
         addNotification,
         removeNotification,
         clearNotifications,
+        fetchServerNotifications,
 
         // Location
         location,
@@ -492,6 +542,9 @@ export function AppProvider({ children }) {
         // UI
         darkMode,
         toggleDarkMode: () => setDarkMode((prev) => !prev),
+
+        // Utilities
+        resetAppState,
       }}
     >
       {children}

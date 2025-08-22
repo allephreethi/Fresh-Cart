@@ -34,6 +34,15 @@ export function UserProvider({ children }) {
     }
   }, [user, profilePic]);
 
+  // ===== Helper: clear all user data =====
+  const clearUserData = () => {
+    setUser(null);
+    setProfilePic(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("profilePic");
+    localStorage.removeItem("token");
+  };
+
   // ===== Update user info =====
   const updateUser = (updated) => {
     setUser((prev) => ({ ...prev, ...updated }));
@@ -66,6 +75,8 @@ export function UserProvider({ children }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
 
+      clearUserData(); // 👈 clear old account data
+
       setUser(data.user);
       if (data.user?.profileImage) setProfilePic(data.user.profileImage);
       if (data.token) localStorage.setItem("token", data.token);
@@ -77,13 +88,33 @@ export function UserProvider({ children }) {
     }
   };
 
+  // ===== Signup =====
+  const signupUser = async (newUser) => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Signup failed");
+
+      clearUserData(); // 👈 clear old account data
+
+      setUser(data.user);
+      if (data.user?.profileImage) setProfilePic(data.user.profileImage);
+      if (data.token) localStorage.setItem("token", data.token);
+
+      return data.user;
+    } catch (err) {
+      console.error("Signup error:", err);
+      throw err;
+    }
+  };
+
   // ===== Logout =====
   const logoutUser = () => {
-    setUser(null);
-    setProfilePic(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("profilePic");
-    localStorage.removeItem("token");
+    clearUserData();
   };
 
   return (
@@ -95,6 +126,7 @@ export function UserProvider({ children }) {
         updateProfilePic,
         getProfileImageUrl,
         loginUser,
+        signupUser,
         logoutUser,
         setUser,
         setProfilePic,

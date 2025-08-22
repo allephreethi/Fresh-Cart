@@ -96,3 +96,6 @@ CREATE TABLE OrderItems (
 select * from Orders;
 
 select * from OrderItems;
+
+ALTER TABLE Orders
+ADD discountAmount DECIMAL(10,2) DEFAULT 0;

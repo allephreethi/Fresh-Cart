@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Mail, Phone, ChevronDown, Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { useAppContext } from '../context/AppContext';
 
 const faqs = [
   { question: 'How do I track my order?', answer: 'You can track your order from the "My Orders" page after logging in.' },
@@ -13,62 +14,87 @@ const faqs = [
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export default function Help() {
+  const { user } = useAppContext();
   const [openIndex, setOpenIndex] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [requests, setRequests] = useState([]);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+
   const toggleFAQ = (index) => setOpenIndex(openIndex === index ? null : index);
 
-  // Fetch user requests from backend
+  const getToken = () => user?.token || localStorage.getItem('token');
+
+  const authHeaders = () => ({
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+
+  // Auto-fill name/email from user when form opens
+  useEffect(() => {
+    if (showForm && user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        message: '',
+      });
+    }
+  }, [showForm, user]);
+
   const fetchRequests = async () => {
+    const token = getToken();
+    if (!token) return setRequests([]);
     try {
-      const res = await axios.get(`${API_URL}/api/help-request`);
-      setRequests(res.data);
+      const res = await axios.get(`${API_URL}/api/help-request`, authHeaders());
+      setRequests(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Fetch requests error:', err);
+      setRequests([]);
     }
   };
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [user]);
 
-  // Show toast
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type }), 3000);
   };
 
-  // Submit form handler
+  const handleChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = {
-      name: e.target.name.value,
-      email: e.target.email.value,
-      message: e.target.message.value,
-    };
+    const token = getToken();
+    if (!token) return showToast('You must be logged in to submit requests', 'error');
+
     try {
-      await axios.post(`${API_URL}/api/help-request`, formData);
+      await axios.post(`${API_URL}/api/help-request`, formData, authHeaders());
       setShowForm(false);
-      e.target.reset();
+      setFormData(prev => ({ ...prev, message: '' })); // reset only message
       fetchRequests();
       showToast('Request submitted successfully!', 'success');
     } catch (err) {
-      console.error(err);
+      console.error('Submit request error:', err);
       showToast('Failed to submit request.', 'error');
     }
   };
 
-  // Delete request
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this request?')) return;
     try {
-      await axios.delete(`${API_URL}/api/help-request/${id}`);
+      await axios.delete(`${API_URL}/api/help-request/${id}`, authHeaders());
       fetchRequests();
       showToast('Request deleted successfully!', 'success');
     } catch (err) {
-      console.error(err);
+      console.error('Delete request error:', err);
       showToast('Failed to delete request.', 'error');
     }
   };
@@ -83,12 +109,18 @@ export default function Help() {
           </p>
         </div>
 
-        {/* FAQs Section */}
+        {/* FAQs */}
         <div className="bg-[#E8FFD7] rounded-xl p-5 sm:p-6 mb-10">
           <h2 className="text-xl font-semibold text-[#5E936C] mb-5">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white rounded-md p-4 shadow-sm border border-[#93DA97]">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="bg-white rounded-md p-4 shadow-sm border border-[#93DA97]"
+              >
                 <button
                   onClick={() => toggleFAQ(index)}
                   className="flex items-center justify-between w-full text-left font-medium text-[#5E936C]"
@@ -101,7 +133,7 @@ export default function Help() {
                 {openIndex === index && (
                   <p className="text-sm text-zinc-700 mt-3">{faq.answer}</p>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -111,56 +143,58 @@ export default function Help() {
           <ContactCard
             icon={<Phone className="w-5 h-5" />}
             title="Call Us"
-            desc={
-              <a href="tel:+15551234567" className="text-[#5E936C] underline hover:text-[#4e7b5b]">
-                +1 (555) 123-4567
-              </a>
-            }
+            desc={<a href="tel:+15551234567" className="text-[#5E936C] underline hover:text-[#4e7b5b]">+1 (555) 123-4567</a>}
           />
           <ContactCard
             icon={<Mail className="w-5 h-5" />}
             title="Email Us"
-            desc={
-              <a href="mailto:support@freshcart.com" className="text-[#5E936C] underline hover:text-[#4e7b5b]">
-                support@freshcart.com
-              </a>
-            }
+            desc={<a href="mailto:support@freshcart.com" className="text-[#5E936C] underline hover:text-[#4e7b5b]">support@freshcart.com</a>}
           />
           <ContactCard
             icon={<Settings className="w-5 h-5" />}
             title="Request Type"
             desc={
-              <button
-                onClick={() => setShowForm(true)}
-                className="mt-2 px-4 py-1 text-sm bg-[#5E936C] text-white rounded-md hover:bg-[#4e7b5b] transition"
-              >
-                Contact Support
-              </button>
+              getToken() ? (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="mt-2 px-4 py-1 text-sm bg-[#5E936C] text-white rounded-md hover:bg-[#4e7b5b] transition"
+                >
+                  Contact Support
+                </button>
+              ) : (
+                <p className="text-red-500 mt-2 text-sm">Please login to contact support.</p>
+              )
             }
           />
         </div>
 
-        {/* User Submitted Requests */}
-        {requests.length > 0 && (
+        {/* User Requests */}
+        {getToken() && (
           <div className="mb-10">
             <h2 className="text-xl font-semibold text-[#5E936C] mb-4">Your Submitted Requests</h2>
-            <div className="space-y-4">
-              {requests.map((req) => (
-                <div key={req.id} className="border p-4 rounded-md bg-white flex justify-between items-start">
-                  <div>
-                    <p><strong>Name:</strong> {req.name}</p>
-                    <p><strong>Email:</strong> {req.email}</p>
-                    <p><strong>Message:</strong> {req.message}</p>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(req.id)}
-                    className="text-red-500 hover:text-red-700"
+            {requests.length ? (
+              <div className="space-y-4">
+                {requests.map(req => (
+                  <motion.div
+                    key={req.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border p-4 rounded-md bg-white flex justify-between items-start shadow-sm"
                   >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div>
+                      <p><strong>Name:</strong> {req.name}</p>
+                      <p><strong>Email:</strong> {req.email}</p>
+                      <p><strong>Message:</strong> {req.message}</p>
+                    </div>
+                    <button onClick={() => handleDelete(req.id)} className="text-red-500 hover:text-red-700">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center">No requests yet. Start by contacting support!</p>
+            )}
           </div>
         )}
       </div>
@@ -195,6 +229,8 @@ export default function Help() {
                     name="name"
                     placeholder="Your Name"
                     required
+                    value={formData.name}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                   />
                   <input
@@ -202,6 +238,8 @@ export default function Help() {
                     name="email"
                     placeholder="Your Email"
                     required
+                    value={formData.email}
+                    onChange={handleChange}
                     className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                   />
                 </div>
@@ -210,12 +248,11 @@ export default function Help() {
                   rows="4"
                   placeholder="How can we help you?"
                   required
+                  value={formData.message}
+                  onChange={handleChange}
                   className="w-full p-3 border rounded-md border-[#93DA97] bg-white focus:outline-none focus:ring-2 focus:ring-[#5E936C]"
                 ></textarea>
-                <button
-                  type="submit"
-                  className="bg-[#5E936C] text-white px-6 py-3 rounded-md hover:bg-[#4e7b5b] transition"
-                >
+                <button type="submit" className="bg-[#5E936C] text-white px-6 py-3 rounded-md hover:bg-[#4e7b5b] transition">
                   Submit
                 </button>
               </form>
@@ -224,7 +261,7 @@ export default function Help() {
         )}
       </AnimatePresence>
 
-      {/* Toast Notification */}
+      {/* Toast */}
       <AnimatePresence>
         {toast.show && (
           <motion.div
